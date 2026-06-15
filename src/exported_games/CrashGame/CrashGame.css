@@ -1079,7 +1079,7 @@
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .crash-game .game-container {
         flex-direction: column;
     }
@@ -1621,7 +1621,7 @@
 }
 
 /* Mobile Responsive Layout */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .crash-game {
         overflow-y: auto;
     }
@@ -1647,3 +1647,4 @@
         margin-top: 60px;
     }
 }
+

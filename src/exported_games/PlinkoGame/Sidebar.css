@@ -717,7 +717,7 @@
    RESPONSIVE DESIGN
    ================================================================= */
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .sidebar {
         width: 100%;
         min-width: auto;

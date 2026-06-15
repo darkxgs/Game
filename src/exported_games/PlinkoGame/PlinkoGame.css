@@ -1049,7 +1049,7 @@
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .plinko-container {
         flex-direction: column;
     }
@@ -1087,7 +1087,7 @@
 }
 
 /* Mobile Responsive Layout */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .plinko-page {
         overflow-y: auto;
     }
@@ -1114,3 +1114,4 @@
         height: auto !important;
     }
 }
+

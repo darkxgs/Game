@@ -1085,3 +1085,32 @@
         font-size: 24px;
     }
 }
+
+/* Mobile Responsive Layout */
+@media (max-width: 768px) {
+    .plinko-page {
+        overflow-y: auto;
+    }
+    .plinko-container {
+        flex-direction: column-reverse;
+        overflow-y: visible;
+        height: auto;
+    }
+    .plinko-sidebar-wrapper {
+        width: 100%;
+        min-width: 100%;
+        border-right: none;
+        border-top: 1px solid var(--border-color);
+        height: auto;
+        flex: none;
+    }
+    .plinko-game-wrapper {
+        min-height: 500px;
+        flex: none;
+    }
+    /* Ensure the canvas doesn't overflow horizontally */
+    .plinko-game-wrapper canvas {
+        max-width: 100%;
+        height: auto !important;
+    }
+}

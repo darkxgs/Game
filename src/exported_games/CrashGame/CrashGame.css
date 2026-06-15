@@ -1619,3 +1619,31 @@
 .crash-toast-bet .crash-toast-desc {
     color: #f7931a;
 }
+
+/* Mobile Responsive Layout */
+@media (max-width: 768px) {
+    .crash-game {
+        overflow-y: auto;
+    }
+    .crash-game .game-container {
+        flex-direction: column-reverse;
+        overflow-y: visible;
+        height: auto;
+    }
+    .crash-game .crash-sidebar {
+        width: 100%;
+        min-width: 100%;
+        border-right: none;
+        border-top: 1px solid var(--border-color);
+        padding-bottom: 24px;
+        height: auto;
+        flex: none;
+    }
+    .crash-game .game-display {
+        min-height: 450px;
+        flex: none;
+    }
+    .chart-container-antd {
+        margin-top: 60px;
+    }
+}

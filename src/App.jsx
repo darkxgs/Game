@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import PlinkoGame from './exported_games/PlinkoGame/PlinkoGame';
 import CrashGame from './exported_games/CrashGame/CrashGame';
+import DinoGame from './exported_games/DinoGame/DinoGame';
 import './index.css';
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
           <nav>
             <Link to="/plinko" className="nav-link">Plinko</Link>
             <Link to="/crash" className="nav-link">Crash</Link>
+            <Link to="/dino" className="nav-link">Dino</Link>
           </nav>
         </header>
         <main className="app-main">
@@ -24,6 +26,7 @@ function App() {
             } />
             <Route path="/plinko" element={<PlinkoGame />} />
             <Route path="/crash" element={<CrashGame />} />
+            <Route path="/dino" element={<DinoGame />} />
           </Routes>
         </main>
       </div>

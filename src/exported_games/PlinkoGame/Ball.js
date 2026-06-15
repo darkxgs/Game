@@ -1,5 +1,5 @@
 // Custom Ball Physics - Deterministic Plinko Ball
-// Port from plinko-stake-app/src/game/classes/Ball.ts
+// Port from plinko-linkup-app/src/game/classes/Ball.ts
 // Uses padding system (×10000) for deterministic floating-point math
 // x, y, vx, vy are all in PADDED space. Only unpad() when drawing.
 
@@ -126,3 +126,4 @@ export class Ball {
 
 export { pad, unpad, DECIMAL_MULTIPLIER };
 export default Ball;
+

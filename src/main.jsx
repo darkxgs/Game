@@ -4,8 +4,8 @@ import { ConfigProvider, theme } from 'antd'
 import './index.css'
 import App from './App.jsx'
 
-// Custom dark theme for Stake
-const stakeTheme = {
+// Custom dark theme for Linkup
+const linkupTheme = {
     algorithm: theme.darkAlgorithm,
     token: {
         colorPrimary: '#00f0ff',
@@ -59,8 +59,9 @@ const stakeTheme = {
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <ConfigProvider theme={stakeTheme}>
+    <ConfigProvider theme={linkupTheme}>
       <App />
     </ConfigProvider>
   </StrictMode>,
 )
+

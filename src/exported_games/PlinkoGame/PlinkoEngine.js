@@ -149,7 +149,7 @@ class PlinkoEngine {
 
                 this.ctx.beginPath();
                 this.ctx.arc(pin.x, pin.y, pin.radius, 0, Math.PI * 2);
-                this.ctx.fillStyle = '#00f0ff'; // Stake signature green when hit
+                this.ctx.fillStyle = '#00f0ff'; // Linkup signature green when hit
                 this.ctx.fill();
 
                 // Bright glow effect
@@ -410,3 +410,4 @@ class PlinkoEngine {
 }
 
 export default PlinkoEngine;
+

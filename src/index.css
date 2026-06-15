@@ -47,7 +47,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #0f1923; /* Stake-like dark background */
+  background-color: #0f1923; /* Linkup-like dark background */
   color: white;
 }
 
@@ -106,3 +106,4 @@ body {
   color: #b1bad3;
   font-size: 1.2rem;
 }
+

@@ -123,26 +123,34 @@ export class AudioManager {
         if (this.ctx.state === 'suspended') return;
 
         const now = this.ctx.currentTime;
-        if (now - this.lastTickTime < 0.1) return;
+        // Engine rumble ticks very fast
+        if (now - this.lastTickTime < 0.03) return;
         this.lastTickTime = now;
 
-        // Soft, futuristic blip
+        // Engine Rumble: Sawtooth + Lowpass Filter
         const osc = this.ctx.createOscillator();
+        const filter = this.ctx.createBiquadFilter();
         const gain = this.ctx.createGain();
 
-        osc.type = 'sine';
-        // Base freq is 400Hz, climbs very slowly logarithmically
-        const freq = 400 + (Math.log10(Math.max(1, multiplier)) * 300);
+        osc.type = 'sawtooth';
+        // Base frequency 50Hz, climbs up to 300Hz smoothly
+        const freq = 50 + (Math.log10(Math.max(1, multiplier)) * 100);
         osc.frequency.setValueAtTime(freq, now);
 
-        gain.gain.setValueAtTime(0.04, now); // Quiet blip
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+        filter.type = 'lowpass';
+        // Filter opens up as multiplier increases, revealing higher harmonics
+        const cutoff = 200 + (Math.log10(Math.max(1, multiplier)) * 1000);
+        filter.frequency.setValueAtTime(cutoff, now);
 
-        osc.connect(gain);
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+
+        osc.connect(filter);
+        filter.connect(gain);
         gain.connect(this.compressor);
 
         osc.start(now);
-        osc.stop(now + 0.1);
+        osc.stop(now + 0.06);
     }
 
     playCrashEnd() {
@@ -152,41 +160,47 @@ export class AudioManager {
 
         const now = this.ctx.currentTime;
         
-        // Deep explosion impact: Low sine punch + filtered noise
-        
-        // 1. Sine Punch (808 kick style)
+        // Deep explosion impact
         const osc = this.ctx.createOscillator();
         const oscGain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(150, now);
-        osc.frequency.exponentialRampToValueAtTime(20, now + 0.3); // rapid pitch drop
+        osc.type = 'square'; // harsher impact
+        osc.frequency.setValueAtTime(100, now);
+        osc.frequency.exponentialRampToValueAtTime(10, now + 0.5); 
         
-        oscGain.gain.setValueAtTime(0.5, now);
-        oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+        oscGain.gain.setValueAtTime(0.6, now);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
         
-        osc.connect(oscGain);
+        // Lowpass to make square sound like deep sub
+        const subFilter = this.ctx.createBiquadFilter();
+        subFilter.type = 'lowpass';
+        subFilter.frequency.setValueAtTime(400, now);
+        subFilter.frequency.exponentialRampToValueAtTime(50, now + 0.8);
+
+        osc.connect(subFilter);
+        subFilter.connect(oscGain);
         oscGain.connect(this.compressor);
         osc.start(now);
-        osc.stop(now + 0.8);
+        osc.stop(now + 1.2);
 
-        // 2. Filtered noise explosion
+        // Filtered noise explosion
         const noise = this.ctx.createBufferSource();
         noise.buffer = this.noiseBuffer;
         
         const filter = this.ctx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(1000, now);
-        filter.frequency.exponentialRampToValueAtTime(100, now + 0.5);
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(800, now);
+        filter.frequency.exponentialRampToValueAtTime(100, now + 1.0);
+        filter.Q.setValueAtTime(0.5, now);
 
         const noiseGain = this.ctx.createGain();
-        noiseGain.gain.setValueAtTime(0.4, now);
-        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+        noiseGain.gain.setValueAtTime(0.8, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
 
         noise.connect(filter);
         filter.connect(noiseGain);
         noiseGain.connect(this.compressor);
         noise.start(now);
-        noise.stop(now + 0.8);
+        noise.stop(now + 1.5);
     }
 
     playCashout() {
@@ -196,27 +210,29 @@ export class AudioManager {
 
         const now = this.ctx.currentTime;
         
-        // Golden "bling" sound
+        // Golden "bling" sound - Ascending magic chime
         const playNote = (freq, delay) => {
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             
-            // Triangle has a bell-like quality when filtered/enveloped
-            osc.type = 'triangle';
+            osc.type = 'sine';
             osc.frequency.setValueAtTime(freq, now + delay);
             
-            gain.gain.setValueAtTime(0.12, now + delay);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.4);
+            gain.gain.setValueAtTime(0, now + delay);
+            gain.gain.linearRampToValueAtTime(0.15, now + delay + 0.02); // smooth attack
+            gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.6); // long tail
             
             osc.connect(gain);
             gain.connect(this.compressor);
             
             osc.start(now + delay);
-            osc.stop(now + delay + 0.4);
+            osc.stop(now + delay + 0.6);
         };
 
-        // B major 6th interval for a pleasant "success" ring
-        playNote(987.77, 0);       // B5
-        playNote(1244.51, 0.08);   // D#6
+        // Ascending magic chime (C Major Arp)
+        playNote(1046.50, 0);       // C6
+        playNote(1318.51, 0.05);    // E6
+        playNote(1567.98, 0.1);     // G6
+        playNote(2093.00, 0.15);    // C7
     }
 }

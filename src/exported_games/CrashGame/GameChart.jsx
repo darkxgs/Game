@@ -9,6 +9,7 @@ function GameChart({ phase, multiplier, elapsedTime, countdown }) {
     const rocketRef = useRef(null)
     const exhaustRef = useRef(null)
     const explosionRef = useRef(null)
+    const starsRef = useRef([])
     // Cache canvas dimensions to avoid expensive getBoundingClientRect every frame
     const canvasSizeRef = useRef({ width: 0, height: 0, dpr: 1 })
 
@@ -67,6 +68,18 @@ function GameChart({ phase, multiplier, elapsedTime, countdown }) {
         canvas.height = rect.height * dpr
         canvasSizeRef.current = { width: rect.width, height: rect.height, dpr }
 
+        // Initialize stars
+        const stars = []
+        for(let i=0; i<150; i++) {
+            stars.push({
+                x: Math.random(),
+                y: Math.random(),
+                size: Math.random() * 2 + 0.5,
+                speed: Math.random() * 0.003 + 0.001
+            })
+        }
+        starsRef.current = stars
+
         return () => observer.disconnect()
     }, [])
 
@@ -82,6 +95,26 @@ function GameChart({ phase, multiplier, elapsedTime, countdown }) {
         // Reset transform and clear
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
         ctx.clearRect(0, 0, width, height)
+
+        // Draw dynamic starfield
+        const stars = starsRef.current;
+        const speedMult = phase === 'running' ? Math.max(1, elapsedTime * 2) : 0.5;
+        
+        ctx.fillStyle = '#ffffff';
+        stars.forEach((star, index) => {
+            if (phase === 'running') {
+                star.x -= star.speed * speedMult * 0.8; // move left
+                star.y += star.speed * speedMult;       // move down
+                if (star.x < 0) star.x = 1;
+                if (star.y > 1) star.y = 0;
+            }
+            // Twinkle effect
+            ctx.globalAlpha = (Math.sin(Date.now() * 0.002 + index) * 0.4 + 0.6) * 0.8;
+            ctx.beginPath();
+            ctx.arc(star.x * width, star.y * height, star.size, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        ctx.globalAlpha = 1.0;
 
         const padding = { left: 60, right: 30, top: 50, bottom: 60 }
         const chartWidth = width - padding.left - padding.right
@@ -318,7 +351,7 @@ function GameChart({ phase, multiplier, elapsedTime, countdown }) {
             </div>
 
             {/* Multiplier Display */}
-            <div className={`multiplier-container ${phase === 'crashed' ? 'crashed' : ''}`}>
+            <div className={`multiplier-container ${phase}`}>
                 <Title
                     level={1}
                     className="multiplier-title"

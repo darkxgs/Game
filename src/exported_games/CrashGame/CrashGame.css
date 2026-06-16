@@ -541,11 +541,6 @@
     100% {
         transform: translateX(0);
     }
-
-    20% {
-        transform: translateX(-8px) rotate(-2deg);
-    }
-
     40% {
         transform: translateX(8px) rotate(2deg);
     }
@@ -1648,3 +1643,13 @@
     }
 }
 
+
+@keyframes pulseGlow {
+    0% { transform: scale(1); filter: brightness(1) contrast(1); }
+    50% { transform: scale(1.03); filter: brightness(1.2) contrast(1.1); }
+    100% { transform: scale(1); filter: brightness(1) contrast(1); }
+}
+
+.chart-container-antd .multiplier-container.running .multiplier-title {
+    animation: pulseGlow 0.8s infinite alternate ease-in-out;
+}

@@ -51,23 +51,7 @@ export default function SpinWinGame() {
     setBgParticles(particles);
   }, []);
 
-  useEffect(() => {
-    const handleResize = () => {
-      const scaler = document.getElementById('sw-scaler');
-      const wrapper = document.getElementById('sw-wrapper');
-      const container = document.getElementById('sw-container');
-      if (!scaler || !wrapper || !container) return;
-      
-      const scale = Math.min(scaler.clientWidth / 480, 1);
-      
-      wrapper.style.transform = `scale(${scale})`;
-      container.style.height = `${scaler.clientHeight / scale}px`;
-    };
-    
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+
 
   const toggleSector = (index: number) => {
     if (spinning) return;

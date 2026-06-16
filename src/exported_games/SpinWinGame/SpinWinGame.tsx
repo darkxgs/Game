@@ -53,9 +53,9 @@ export default function SpinWinGame() {
 
   useEffect(() => {
     const handleResize = () => {
-      const scaler = document.getElementById('app-scaler');
-      const wrapper = document.getElementById('scale-wrapper');
-      const container = document.getElementById('app-container');
+      const scaler = document.getElementById('sw-scaler');
+      const wrapper = document.getElementById('sw-wrapper');
+      const container = document.getElementById('sw-container');
       if (!scaler || !wrapper || !container) return;
       
       scaler.style.height = `${window.innerHeight}px`;
@@ -158,9 +158,9 @@ export default function SpinWinGame() {
 
   return (
     <div className="spin-win-app">
-    <div id="app-scaler" className="app-scaler">
-      <div id="scale-wrapper" className="scale-wrapper">
-        <div id="app-container" className="app-container">
+    <div id="sw-scaler" className="sw-scaler">
+      <div id="sw-wrapper" className="sw-wrapper">
+        <div id="sw-container" className="sw-container">
 
           {jackpotPrize !== null && (
             <JackpotOverlay amount={jackpotPrize} onComplete={() => setJackpotPrize(null)} />
@@ -229,6 +229,7 @@ export default function SpinWinGame() {
     </div>
 );
 }
+
 
 
 

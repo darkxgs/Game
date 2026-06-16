@@ -154,3 +154,4 @@ export const Wheel: React.FC<WheelProps> = ({ spinTo, selectedSectors, winningSe
     </div>
   );
 };
+

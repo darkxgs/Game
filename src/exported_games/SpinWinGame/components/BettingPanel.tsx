@@ -39,3 +39,4 @@ export const BettingPanel: React.FC<BettingPanelProps> = ({ betAmount, setBetAmo
     </div>
   );
 };
+

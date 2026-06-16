@@ -21,8 +21,9 @@ export const Toast: React.FC<ToastProps> = ({ message, onClose, duration = 2600 
   }, [message, duration, onClose]);
 
   return (
-    <div className={`toast ${show ? 's' : ''}`}>
+    <div className={`sw-toast ${show ? 's' : ''}`}>
       {message}
     </div>
   );
 };
+

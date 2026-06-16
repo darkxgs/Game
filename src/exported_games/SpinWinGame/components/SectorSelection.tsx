@@ -54,3 +54,4 @@ export const SectorSelection: React.FC<SectorSelectionProps> = ({ selectedSector
     </div>
   );
 };
+

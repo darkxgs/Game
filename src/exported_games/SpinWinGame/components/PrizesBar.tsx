@@ -28,3 +28,4 @@ export const PrizesBar: React.FC = () => {
     </div>
   );
 };
+

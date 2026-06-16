@@ -48,3 +48,4 @@ export const JackpotOverlay: React.FC<JackpotProps> = ({ amount, onComplete }) =
     </div>
   );
 };
+

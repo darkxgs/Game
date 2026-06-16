@@ -58,12 +58,10 @@ export default function SpinWinGame() {
       const container = document.getElementById('sw-container');
       if (!scaler || !wrapper || !container) return;
       
-      scaler.style.height = `${window.innerHeight}px`;
-      
-      const scale = Math.min(window.innerWidth / 480, 1);
+      const scale = Math.min(scaler.clientWidth / 480, 1);
       
       wrapper.style.transform = `scale(${scale})`;
-      container.style.height = `${window.innerHeight / scale}px`;
+      container.style.height = `${scaler.clientHeight / scale}px`;
     };
     
     handleResize();

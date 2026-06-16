@@ -4,6 +4,7 @@ import { App as AntApp } from 'antd';
 import PlinkoGame from './exported_games/PlinkoGame/PlinkoGame';
 import CrashGame from './exported_games/CrashGame/CrashGame';
 import DinoGame from './exported_games/DinoGame/DinoGame';
+import SpinWinGame from './exported_games/SpinWinGame/SpinWinGame';
 import './index.css';
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
             <Link to="/plinko" className="nav-link">Plinko</Link>
             <Link to="/crash" className="nav-link">Crash</Link>
             <Link to="/dino" className="nav-link">Dino</Link>
+            <Link to="/spinwin" className="nav-link">Spin & Win</Link>
           </nav>
         </header>
         <main className="app-main">
@@ -29,6 +31,7 @@ function App() {
             <Route path="/plinko" element={<PlinkoGame />} />
             <Route path="/crash" element={<CrashGame />} />
             <Route path="/dino" element={<DinoGame />} />
+            <Route path="/spinwin" element={<SpinWinGame />} />
           </Routes>
         </main>
       </div>

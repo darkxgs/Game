@@ -157,7 +157,6 @@ export default function SpinWinGame() {
   }, [spinning, selectedSectors, betAmount, balance, totalDeg]);
 
   return (
-    <div className="spin-win-app">
     <div id="app-scaler" className="app-scaler">
       <div id="scale-wrapper" className="scale-wrapper">
         <div id="app-container" className="app-container">
@@ -225,7 +224,6 @@ export default function SpinWinGame() {
           </div>
         </div>
       </div>
-    </div>
     </div>
 );
 }

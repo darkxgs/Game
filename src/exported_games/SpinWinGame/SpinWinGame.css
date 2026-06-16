@@ -471,7 +471,7 @@
   font-style: normal;
   font-family: var(--font-en);
   font-weight: 700;
-  margin-right: 4px;
+  margin-inline-end: 4px;
 }
 
 .rb {

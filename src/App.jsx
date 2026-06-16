@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { App as AntApp } from 'antd';
 import PlinkoGame from './exported_games/PlinkoGame/PlinkoGame';
@@ -8,18 +8,37 @@ import SpinWinGame from './exported_games/SpinWinGame/SpinWinGame';
 import './index.css';
 
 function App() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  const closeSidebar = () => setIsSidebarOpen(false);
+
   return (
     <AntApp>
       <BrowserRouter>
         <div className="app-container">
         <header className="app-header">
-          <nav>
-            <Link to="/plinko" className="nav-link">Plinko</Link>
-            <Link to="/crash" className="nav-link">Crash</Link>
-            <Link to="/dino" className="nav-link">Dino</Link>
-            <Link to="/spin-win" className="nav-link">Spin & Win</Link>
-          </nav>
+          <button className="menu-btn" onClick={toggleSidebar}>
+            ☰
+          </button>
+          <div className="logo"><Link to="/">Linkup Games</Link></div>
         </header>
+
+        <div className={`game-sidebar ${isSidebarOpen ? 'open' : ''}`}>
+          <div className="sidebar-header">
+            <h2>Games</h2>
+            <button className="close-btn" onClick={closeSidebar}>×</button>
+          </div>
+          <nav className="sidebar-nav">
+            <Link to="/plinko" className="nav-link" onClick={closeSidebar}>Plinko</Link>
+            <Link to="/crash" className="nav-link" onClick={closeSidebar}>Crash</Link>
+            <Link to="/dino" className="nav-link" onClick={closeSidebar}>Dino</Link>
+            <Link to="/spin-win" className="nav-link" onClick={closeSidebar}>Spin & Win</Link>
+          </nav>
+        </div>
+        
+        {isSidebarOpen && <div className="sidebar-overlay" onClick={closeSidebar}></div>}
+
         <main className="app-main">
           <Routes>
             <Route path="/" element={

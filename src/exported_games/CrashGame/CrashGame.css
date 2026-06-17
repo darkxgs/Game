@@ -1653,3 +1653,101 @@
 .chart-container-antd .multiplier-container.running .multiplier-title {
     animation: pulseGlow 0.8s infinite alternate ease-in-out;
 }
+
+/* ===== IMAGE CLONE LAYOUT ===== */
+.game-container.clone-layout {
+    display: flex;
+    flex-direction: row;
+    height: calc(100vh - 100px);
+    min-height: 600px;
+    max-height: 900px;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    background: #111111;
+    color: #fff;
+    padding: 16px;
+    gap: 16px;
+    box-sizing: border-box;
+    border-radius: 12px;
+}
+
+.clone-layout .crash-sidebar-left {
+    width: 320px;
+    min-width: 320px;
+    background: #1a1a1a;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.clone-layout .crash-main-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+.clone-layout .crash-chart-section {
+    flex: 1;
+    background: #0b0914;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #2a2a2a;
+    display: flex;
+    flex-direction: column;
+}
+
+.game-chart-container {
+    flex: 1;
+    position: relative;
+    width: 100%;
+}
+
+.clone-layout .crash-betting-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+    height: auto;
+}
+
+/* Mobile Responsive Layout for Image Clone */
+@media (max-width: 900px) {
+    .game-container.clone-layout {
+        flex-direction: column;
+        height: auto;
+        min-height: auto;
+        max-height: none;
+        overflow-y: visible;
+        padding: 8px;
+    }
+    
+    .clone-layout .crash-sidebar-left {
+        width: 100%;
+        min-width: 100%;
+        height: auto;
+        max-height: none;
+        order: 2; /* Put players list at the bottom */
+    }
+
+    .clone-layout .crash-main-area {
+        height: auto;
+        order: 1; /* Game and bets on top */
+    }
+
+    .clone-layout .crash-chart-section {
+        height: 350px; 
+        min-height: 350px;
+    }
+
+    .clone-layout .crash-betting-section {
+        grid-template-columns: 1fr; /* Stack betting panels */
+    }
+}
+

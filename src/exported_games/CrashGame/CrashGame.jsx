@@ -531,178 +531,56 @@ function CrashGame() {
         <div className={`crash-game layout-${layout}`}>
             {contextHolder}
 
-            <div className="game-container">
-                {/* Betting Panel + Player Bets */}
-                <div className="crash-sidebar">
-                    <BettingPanel
+            <div className="game-container clone-layout">
+                {/* Left Sidebar: Player Bets & Tabs */}
+                <div className="crash-sidebar-left">
+                    <PlayerBets
                         phase={phase}
-                        betPlaced={betPlaced}
                         multiplier={multiplier}
-                        onBet={handleBet}
-                        onCashout={handleCashout}
+                        onPlayerCashout={handlePlayerCashout}
+                        userBetData={userBetData}
                     />
+                </div>
 
-                    {/* Player Bets List */}
-                    {showPlayerBets && (
-                        <PlayerBets
+                {/* Right Main Area */}
+                <div className="crash-main-area" ref={gameDisplayRef}>
+                    {/* Top: Chart */}
+                    <div className="crash-chart-section">
+                        <GameChart
                             phase={phase}
                             multiplier={multiplier}
-                            onPlayerCashout={handlePlayerCashout}
-                            userBetData={userBetData}
+                            elapsedTime={elapsedTime}
+                            countdown={countdown}
+                            history={history}
                         />
-                    )}
+                        {showPlayerResults && (
+                            <PlayerResults cashouts={playerCashouts} />
+                        )}
+                    </div>
 
-                    {/* Footer */}
-                    <div className="sidebar-footer">
-                        <div className="footer-buttons">
-                            <button
-                                className={`footer-btn ${historyDrawerOpen ? 'active' : ''}`}
-                                onClick={() => setHistoryDrawerOpen(true)}
-                                title="Play History & Dashboard"
-                            >
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
-                                </svg>
-                            </button>
-                            <button
-                                className={`footer-btn ${statsDrawerOpen ? 'active' : ''}`}
-                                onClick={() => setStatsDrawerOpen(true)}
-                                title="Live Stats"
-                            >
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M16 11.78l4.24-7.33 1.73 1-5.23 9.05-6.51-3.75L5.46 19H22v2H2V3h2v14.54L9.5 8z" />
-                                </svg>
-                            </button>
-                            <button
-                                className="footer-btn"
-                                onClick={() => setFairnessModalOpen(true)}
-                                title="Provably Fair"
-                            >
-                                <SafetyCertificateOutlined style={{ fontSize: 18 }} />
-                            </button>
-                        </div>
+                    {/* Bottom: Two Betting Panels */}
+                    <div className="crash-betting-section">
+                        <BettingPanel
+                            phase={phase}
+                            betPlaced={betPlaced}
+                            multiplier={multiplier}
+                            onBet={handleBet}
+                            onCashout={handleCashout}
+                            panelId="1"
+                        />
+                        <BettingPanel
+                            phase={phase}
+                            betPlaced={false}
+                            multiplier={multiplier}
+                            onBet={(amt) => messageApi.info('Second bet panel coming soon!')}
+                            onCashout={() => {}}
+                            panelId="2"
+                        />
                     </div>
                 </div>
 
-                {/* Game Display */}
-                <div className="game-display" ref={gameDisplayRef}>
-                    <GameHistory history={history} />
-
-                    <GameChart
-                        phase={phase}
-                        multiplier={multiplier}
-                        elapsedTime={elapsedTime}
-                        countdown={countdown}
-                    />
-
-                    {/* Player Results (floating on chart) */}
-                    {showPlayerResults && (
-                        <PlayerResults cashouts={playerCashouts} />
-                    )}
-
-                    {/* Bottom Controls */}
-                    <div className="bottom-controls-antd">
-                        <Space>
-                            <Tooltip
-                                title={
-                                    <div>
-                                        <div style={{ marginBottom: 8 }}>
-                                            <Text style={{ color: '#fff' }}>Show Player Bets</Text>
-                                            <Switch
-                                                size="small"
-                                                checked={showPlayerBets}
-                                                onChange={setShowPlayerBets}
-                                                style={{ marginLeft: 8 }}
-                                            />
-                                        </div>
-                                        <div>
-                                            <Text style={{ color: '#fff' }}>Show Player Results</Text>
-                                            <Switch
-                                                size="small"
-                                                checked={showPlayerResults}
-                                                onChange={setShowPlayerResults}
-                                                style={{ marginLeft: 8 }}
-                                            />
-                                        </div>
-                                    </div>
-                                }
-                                trigger="click"
-                                placement="top"
-                            >
-                                <Button
-                                    type="text"
-                                    icon={<SettingOutlined />}
-                                    className="control-btn-antd"
-                                />
-                            </Tooltip>
-
-                            {/* Fullscreen Button */}
-                            <Tooltip title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}>
-                                <Button
-                                    type="text"
-                                    icon={isFullscreen ? <FullscreenExitOutlined /> : <ExpandOutlined />}
-                                    className="control-btn-antd"
-                                    onClick={toggleFullscreen}
-                                />
-                            </Tooltip>
 
 
-
-                            {/* Layout Button */}
-                            <Tooltip
-                                title={
-                                    <Radio.Group
-                                        value={layout}
-                                        onChange={(e) => setLayout(e.target.value)}
-                                        size="small"
-                                    >
-                                        <Radio.Button value="default">Default</Radio.Button>
-                                        <Radio.Button value="compact">Compact</Radio.Button>
-                                        <Radio.Button value="wide">Wide</Radio.Button>
-                                    </Radio.Group>
-                                }
-                                trigger="click"
-                                placement="top"
-                            >
-                                <Button
-                                    type="text"
-                                    icon={<AppstoreOutlined />}
-                                    className="control-btn-antd"
-                                />
-                            </Tooltip>
-
-                            {/* Sound Button */}
-                            <Tooltip title={soundEnabled ? 'Mute Sound' : 'Enable Sound'}>
-                                <Button
-                                    type="text"
-                                    icon={<SoundOutlined />}
-                                    className={`control-btn-antd ${!soundEnabled ? 'muted' : ''}`}
-                                    onClick={() => setSoundEnabled(!soundEnabled)}
-                                />
-                            </Tooltip>
-                        </Space>
-
-                        <span className="logo" style={{ color: 'var(--text-primary)' }}>Linkup</span>
-
-                        {/* Fairness Button */}
-                        <Button
-                            type="text"
-                            icon={<SafetyCertificateOutlined />}
-                            className="fairness-btn"
-                            onClick={() => setFairnessModalOpen(true)}
-                        >
-                            Fairness
-                        </Button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Hot Bet Banner */}
-            <div className="hot-bet-banner">
-                <Tag color="purple" className="mega-tag">
-                    🔥 611,100.00×
-                </Tag>
-                <Text type="secondary">ogicjp won big!</Text>
             </div>
 
             {/* Statistics Mini Window / Profit Chart */}

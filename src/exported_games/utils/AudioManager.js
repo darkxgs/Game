@@ -7,6 +7,15 @@ export class AudioManager {
         this.masterGain = null;
         this.compressor = null;
         this.noiseBuffer = null;
+        this.currentVolume = 0.8;
+
+        // Listen for global sound volume changes
+        window.addEventListener('soundVolumeChange', (e) => {
+            this.currentVolume = e.detail;
+            if (this.masterGain && this.ctx) {
+                this.masterGain.gain.setValueAtTime(this.currentVolume, this.ctx.currentTime);
+            }
+        });
     }
 
     _init() {
@@ -23,7 +32,7 @@ export class AudioManager {
             this.compressor.release.setValueAtTime(0.25, this.ctx.currentTime);
 
             this.masterGain = this.ctx.createGain();
-            this.masterGain.gain.setValueAtTime(0.8, this.ctx.currentTime);
+            this.masterGain.gain.setValueAtTime(this.currentVolume, this.ctx.currentTime);
 
             this.compressor.connect(this.masterGain);
             this.masterGain.connect(this.ctx.destination);

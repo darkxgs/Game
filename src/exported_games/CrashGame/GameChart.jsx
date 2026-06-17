@@ -4,7 +4,7 @@ import { WifiOutlined } from '@ant-design/icons'
 
 const { Text, Title } = Typography
 
-function GameChart({ phase, multiplier, elapsedTime, countdown }) {
+function GameChart({ phase, multiplier, elapsedTime, countdown, history = [] }) {
     const canvasRef = useRef(null)
     const rocketRef = useRef(null)
     const exhaustRef = useRef(null)
@@ -116,7 +116,7 @@ function GameChart({ phase, multiplier, elapsedTime, countdown }) {
         });
         ctx.globalAlpha = 1.0;
 
-        const padding = { left: 60, right: 30, top: 50, bottom: 60 }
+        const padding = { left: 10, right: 50, top: 50, bottom: 10 }
         const chartWidth = width - padding.left - padding.right
         const chartHeight = height - padding.top - padding.bottom
 
@@ -127,26 +127,22 @@ function GameChart({ phase, multiplier, elapsedTime, countdown }) {
             return height - padding.bottom - normalized * chartHeight
         }
 
-        // Draw grid lines - batch into single path for performance
-        ctx.strokeStyle = 'rgba(47, 69, 83, 0.25)'
-        ctx.lineWidth = 1
-        ctx.setLineDash([4, 6])
-        ctx.beginPath()
-
-        // Horizontal grid lines
-        for (let i = 0; i <= 5; i++) {
-            const y = padding.top + (chartHeight * i / 5)
-            ctx.moveTo(padding.left, y)
-            ctx.lineTo(width - padding.right, y)
+        // Draw grid dots instead of lines
+        ctx.fillStyle = '#ffffff';
+        // Horizontal dots along bottom edge
+        for (let i = 0; i <= 20; i++) {
+            const x = padding.left + (chartWidth * i / 20);
+            ctx.beginPath();
+            ctx.arc(x, height - padding.bottom, 2, 0, Math.PI * 2);
+            ctx.fill();
         }
-        // Vertical grid lines
-        for (let i = 0; i <= 4; i++) {
-            const x = padding.left + (chartWidth * i / 4)
-            ctx.moveTo(x, padding.top)
-            ctx.lineTo(x, height - padding.bottom)
+        // Vertical dots along left edge
+        for (let i = 0; i <= 10; i++) {
+            const y = padding.top + (chartHeight * i / 10);
+            ctx.beginPath();
+            ctx.arc(padding.left, y, 2, 0, Math.PI * 2);
+            ctx.fill();
         }
-        ctx.stroke()
-        ctx.setLineDash([])
 
         // Draw curve when game is running or crashed
         if ((phase === 'running' || phase === 'crashed') && elapsedTime > 0) {
@@ -170,14 +166,14 @@ function GameChart({ phase, multiplier, elapsedTime, countdown }) {
             )
 
             if (phase === 'crashed') {
-                fillGradient.addColorStop(0, 'rgba(237, 66, 69, 0.02)')
-                fillGradient.addColorStop(0.5, 'rgba(237, 66, 69, 0.25)')
-                fillGradient.addColorStop(1, 'rgba(237, 66, 69, 0.5)')
+                fillGradient.addColorStop(0, 'rgba(255, 0, 76, 0.05)')
+                fillGradient.addColorStop(0.5, 'rgba(255, 0, 76, 0.3)')
+                fillGradient.addColorStop(1, 'rgba(255, 0, 76, 0.6)')
             } else {
-                fillGradient.addColorStop(0, 'rgba(255, 165, 0, 0.02)')
-                fillGradient.addColorStop(0.3, 'rgba(255, 165, 0, 0.15)')
-                fillGradient.addColorStop(0.6, 'rgba(255, 180, 50, 0.35)')
-                fillGradient.addColorStop(1, 'rgba(255, 200, 80, 0.6)')
+                fillGradient.addColorStop(0, 'rgba(255, 0, 102, 0.05)')
+                fillGradient.addColorStop(0.3, 'rgba(255, 0, 102, 0.2)')
+                fillGradient.addColorStop(0.6, 'rgba(255, 0, 102, 0.4)')
+                fillGradient.addColorStop(1, 'rgba(255, 0, 102, 0.7)')
             }
 
             ctx.beginPath()
@@ -192,7 +188,7 @@ function GameChart({ phase, multiplier, elapsedTime, countdown }) {
             ctx.fill()
 
             // OPTIMIZED: Single glow layer instead of 3 separate ones
-            const lineColor = phase === 'crashed' ? '#ed4245' : '#f7931a'
+            const lineColor = phase === 'crashed' ? '#990000' : '#ff004c'
 
             ctx.beginPath()
             ctx.moveTo(points[0].x, points[0].y)
@@ -200,8 +196,8 @@ function GameChart({ phase, multiplier, elapsedTime, countdown }) {
                 ctx.lineTo(points[i].x, points[i].y)
             }
             ctx.strokeStyle = phase === 'crashed'
-                ? 'rgba(237, 66, 69, 0.15)'
-                : 'rgba(247, 147, 26, 0.15)'
+                ? 'rgba(255, 0, 76, 0.2)'
+                : 'rgba(255, 0, 102, 0.3)'
             ctx.lineWidth = 12
             ctx.lineCap = 'round'
             ctx.lineJoin = 'round'
@@ -216,14 +212,12 @@ function GameChart({ phase, multiplier, elapsedTime, countdown }) {
                 timeToX(elapsedTime), 0
             )
             if (phase === 'crashed') {
-                lineGradient.addColorStop(0, '#f7931a')
-                lineGradient.addColorStop(0.7, '#ed4245')
-                lineGradient.addColorStop(1, '#ed4245')
+                lineGradient.addColorStop(0, '#cc003d')
+                lineGradient.addColorStop(1, '#66001f')
             } else {
-                lineGradient.addColorStop(0, '#f7931a')
-                lineGradient.addColorStop(0.5, '#ffaa33')
-                lineGradient.addColorStop(0.8, '#ffcc66')
-                lineGradient.addColorStop(1, '#ffffff')
+                lineGradient.addColorStop(0, '#ff0066')
+                lineGradient.addColorStop(0.5, '#ff1a75')
+                lineGradient.addColorStop(1, '#ff4d94')
             }
 
             ctx.beginPath()
@@ -257,7 +251,11 @@ function GameChart({ phase, multiplier, elapsedTime, countdown }) {
                     rocketRef.current.style.top = `${endY}px`
                     rocketRef.current.style.transform = `translate(-50%, -50%) rotate(${angle}rad) rotate(90deg)`
                 } else {
-                    rocketRef.current.style.display = 'none'
+                    // Show rocket resting at the start position
+                    rocketRef.current.style.display = 'block'
+                    rocketRef.current.style.left = `${padding.left}px`
+                    rocketRef.current.style.top = `${canvasSizeRef.current.height - padding.bottom}px`
+                    rocketRef.current.style.transform = `translate(-50%, -50%) rotate(-0.1rad) rotate(90deg)`
                 }
             }
             if (exhaustRef.current) {
@@ -306,15 +304,15 @@ function GameChart({ phase, multiplier, elapsedTime, countdown }) {
     }
 
     return (
-        <div className="chart-container-antd" style={{ position: 'relative' }}>
-            <canvas ref={canvasRef} className="crash-canvas" />
+        <div className="game-chart-container" style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flex: 1 }}>
+            <canvas ref={canvasRef} className="crash-canvas" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'block' }} />
 
             {/* In-game Overlay Assets - will-change for GPU compositing */}
             <img
                 ref={rocketRef}
-                src="/images/spaceship.png"
-                alt="Rocket"
-                style={{ position: 'absolute', width: '105px', height: 'auto', display: 'none', pointerEvents: 'none', zIndex: 10, filter: 'drop-shadow(0 0 10px rgba(247, 147, 26, 0.8))', willChange: 'transform, left, top' }}
+                src="/images/red_plane.svg"
+                alt="Plane"
+                style={{ position: 'absolute', width: '80px', height: 'auto', pointerEvents: 'none', zIndex: 10, filter: 'drop-shadow(0 0 10px rgba(255, 0, 76, 0.8))', willChange: 'transform, left, top' }}
             />
             <img
                 ref={exhaustRef}
@@ -329,73 +327,56 @@ function GameChart({ phase, multiplier, elapsedTime, countdown }) {
                 style={{ position: 'absolute', width: '250px', height: 'auto', display: 'none', pointerEvents: 'none', zIndex: 11, transform: 'translate(-50%, -50%)', mixBlendMode: 'screen', imageRendering: 'pixelated' }}
             />
 
-            {/* Y Axis Labels */}
-            <div className="y-axis-antd">
-                {yAxisLabels.map((label, i) => (
-                    <Text key={i} className="axis-label" type="secondary">
-                        {label}×
-                    </Text>
-                ))}
+            {/* Top History Bar */}
+            <div className="clone-history-bar" style={{ position: 'absolute', top: 16, left: 16, right: 16, display: 'flex', gap: '8px', overflow: 'hidden' }}>
+                {history.slice(0, 10).map((h, i) => {
+                    const color = h < 1.2 ? '#f87171' : h < 2 ? '#4ade80' : h < 10 ? '#60a5fa' : '#fbbf24';
+                    return (
+                        <span key={i} style={{ color, fontSize: 13, fontWeight: 'bold', background: 'rgba(0,0,0,0.4)', padding: '2px 8px', borderRadius: 4 }}>
+                            x{h.toFixed(2)}
+                        </span>
+                    )
+                })}
             </div>
 
-            {/* X Axis Labels */}
-            <div className="x-axis-antd">
-                {xAxisLabels.map(label => (
-                    <Text key={label} type="secondary" className="x-label">
-                        {label}s
-                    </Text>
-                ))}
-                <Text type="secondary" className="total-time-antd">
-                    Total {Math.floor(elapsedTime)}s
-                </Text>
-            </div>
-
-            {/* Multiplier Display */}
-            <div className={`multiplier-container ${phase}`}>
+            {/* Centered Overlay Container for Multiplier and Status */}
+            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'none', zIndex: 20 }}>
+                {/* Multiplier Display */}
                 <Title
                     level={1}
-                    className="multiplier-title"
                     style={{
-                        color: getMultiplierColor(),
+                        color: '#ffffff',
                         margin: 0,
-                        fontSize: 90,
+                        fontSize: 'clamp(60px, 15vw, 120px)',
                         fontWeight: 800,
                         letterSpacing: '-2px',
-                        textShadow: `0 0 40px ${getMultiplierColor()}50, 0 0 80px ${getMultiplierColor()}30`,
-                        transition: 'color 0.2s ease',
-                        fontFamily: "'Inter', -apple-system, sans-serif"
+                        textShadow: phase === 'crashed' ? 'none' : '0 0 40px rgba(255,255,255,0.2)',
+                        transition: 'none',
+                        fontFamily: "'Inter', -apple-system, sans-serif",
+                        lineHeight: 1
                     }}
                 >
-                    {multiplier.toFixed(2)}
-                    <span className="multiplier-suffix">×</span>
+                    {multiplier.toFixed(2)}x
                 </Title>
-            </div>
 
-            {/* Status Message */}
-            {(phase === 'waiting' || phase === 'crashed') && (
-                <div className="status-container">
-                    <Tag
-                        color={phase === 'crashed' ? 'error' : 'warning'}
-                        className="status-tag"
-                        style={{
-                            fontSize: 15,
-                            padding: '8px 24px',
-                            borderRadius: 24,
-                            fontWeight: 600,
-                            letterSpacing: '0.5px',
-                            textTransform: 'uppercase'
-                        }}
-                    >
-                        {getStatusText()}
-                    </Tag>
-                </div>
-            )}
-
-            {/* Network Status */}
-            <div className="network-indicator">
-                <Badge status="success" />
-                <WifiOutlined style={{ color: '#00f0ff', marginRight: 4 }} />
-                <Text type="secondary" style={{ fontSize: 11 }}>Connected</Text>
+                {/* Status Message */}
+                {(phase === 'waiting' || phase === 'crashed') && (
+                    <div style={{ marginTop: '16px' }}>
+                        <Tag
+                            color={phase === 'crashed' ? 'error' : 'warning'}
+                            style={{
+                                fontSize: 15,
+                                padding: '8px 24px',
+                                borderRadius: 24,
+                                fontWeight: 600,
+                                letterSpacing: '0.5px',
+                                textTransform: 'uppercase'
+                            }}
+                        >
+                            {getStatusText()}
+                        </Tag>
+                    </div>
+                )}
             </div>
         </div>
     )

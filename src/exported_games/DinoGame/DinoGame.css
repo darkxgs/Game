@@ -844,7 +844,7 @@
 
 .dino-sidebar .sidebar-footer {
     margin: auto -16px 0 -16px;
-    padding: 0 16px -8px 16px;
+    padding: 0 16px;
     height: 60px;
     align-items: center;
     border-top: 1px solid var(--border-color);
@@ -1875,21 +1875,38 @@
 /* Mobile Responsive Layout */
 @media (max-width: 1024px) {
     .dino-game-page {
-        overflow-y: auto;
+        height: auto;
+        min-height: 100%;
+        overflow-y: auto !important;
+        overflow-x: hidden;
+    }
+    .dino-main {
+        overflow: visible !important;
+        height: auto;
+        flex: none;
     }
     .dino-container {
         flex-direction: column-reverse;
-        overflow-y: visible;
+        overflow: visible !important;
         height: auto;
     }
     .dino-sidebar {
         width: 100%;
         min-width: 100%;
+        max-height: none !important;
         border-right: none;
+        border-bottom: none;
         border-top: 1px solid var(--border-color);
-        padding-bottom: 24px;
+        padding-top: 24px;
+        padding-bottom: 32px;
         height: auto;
         flex: none;
+        overflow: visible !important;
+        gap: 20px;
+    }
+    
+    .bet-mode-tabs {
+        transform: none;
     }
     .dino-game-area {
         min-height: 450px;

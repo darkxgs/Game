@@ -1,6 +1,7 @@
 // Sidebar Component - Direct port from Sidebar.svelte
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { ROW_COUNT_OPTIONS, AUTO_BET_INTERVAL_MS, getBinColors } from './constants';
+import { CurrencyIcon, CURRENCY_NAME } from '../../config/currency';
 import './Sidebar.css';
 import { Tooltip, Tag, InputNumber, Button, Typography } from 'antd';
 import { TrophyOutlined, StarOutlined, FireOutlined } from '@ant-design/icons';
@@ -34,6 +35,8 @@ function Sidebar({
     const [betMode, setBetMode] = useState('manual'); // 'manual' | 'auto'
     const [autoBetInput, setAutoBetInput] = useState(0);
     const [autoBetsLeft, setAutoBetsLeft] = useState(null);
+    const [isAutoBetting, setIsAutoBetting] = useState(false);
+    const [isBallSelectorExpanded, setIsBallSelectorExpanded] = useState(false);
     const autoBetIntervalRef = useRef(null);
 
     // Validation
@@ -41,51 +44,44 @@ function Sidebar({
     const isBetExceedBalance = betAmount > balance;
     const isAutoBetInputNegative = autoBetInput < 0;
     const isDropBallDisabled = isBetAmountNegative || isBetExceedBalance || isAutoBetInputNegative;
-    const isAutoBetting = autoBetIntervalRef.current !== null;
+    const savedAutoBet = useRef();
 
-    // Reset auto bet
-    const resetAutoBetInterval = useCallback(() => {
-        if (autoBetIntervalRef.current !== null) {
-            clearInterval(autoBetIntervalRef.current);
-            autoBetIntervalRef.current = null;
-        }
-    }, []);
-
-    // Auto bet drop ball
-    const autoBetDropBall = useCallback(() => {
-        if (betAmount > balance) {
-            resetAutoBetInterval();
-            return;
-        }
-
-        // Infinite mode
-        if (autoBetsLeft === null) {
-            onDropBall?.();
-            return;
-        }
-
-        // Finite mode
-        if (autoBetsLeft > 0) {
-            onDropBall?.();
-            setAutoBetsLeft(prev => prev - 1);
-        }
-    }, [betAmount, balance, autoBetsLeft, onDropBall, resetAutoBetInterval]);
-
-    // Check if auto bet should stop
+    // Keep the latest auto bet logic in a ref
     useEffect(() => {
-        if (autoBetsLeft === 0 && autoBetIntervalRef.current !== null) {
-            resetAutoBetInterval();
-        }
-    }, [autoBetsLeft, resetAutoBetInterval]);
+        savedAutoBet.current = () => {
+            if (betAmount > balance) {
+                setIsAutoBetting(false);
+                return;
+            }
 
-    // Start/stop auto bet interval
+            // Infinite mode
+            if (autoBetsLeft === null) {
+                onDropBall?.();
+                return;
+            }
+
+            // Finite mode
+            if (autoBetsLeft > 0) {
+                onDropBall?.();
+                setAutoBetsLeft(prev => prev - 1);
+            }
+        };
+    }, [betAmount, balance, autoBetsLeft, onDropBall]);
+
+    // Check if finite auto bets reached 0
+    useEffect(() => {
+        if (autoBetsLeft === 0) {
+            setIsAutoBetting(false);
+        }
+    }, [autoBetsLeft]);
+
+    // Start/stop auto bet interval efficiently (never restarts on state changes)
     useEffect(() => {
         if (isAutoBetting) {
-            const intervalId = setInterval(autoBetDropBall, AUTO_BET_INTERVAL_MS);
-            autoBetIntervalRef.current = intervalId;
-            return () => clearInterval(intervalId);
+            const id = setInterval(() => savedAutoBet.current(), AUTO_BET_INTERVAL_MS);
+            return () => clearInterval(id);
         }
-    }, [isAutoBetting, autoBetDropBall]);
+    }, [isAutoBetting]);
 
     const handleBetClick = () => {
         if (betMode === 'manual') {
@@ -93,10 +89,10 @@ function Sidebar({
         } else if (!isAutoBetting) {
             // Start auto bet
             setAutoBetsLeft(autoBetInput === 0 ? null : autoBetInput);
-            autoBetIntervalRef.current = setInterval(autoBetDropBall, AUTO_BET_INTERVAL_MS);
+            setIsAutoBetting(true);
         } else {
             // Stop auto bet
-            resetAutoBetInterval();
+            setIsAutoBetting(false);
             setAutoBetsLeft(null);
         }
     };
@@ -111,15 +107,15 @@ function Sidebar({
         setAutoBetInput(isNaN(value) ? 0 : value);
     };
 
-    // Cleanup
+    // Cleanup on unmount
     useEffect(() => {
-        return () => resetAutoBetInterval();
-    }, [resetAutoBetInterval]);
+        return () => setIsAutoBetting(false);
+    }, []);
 
     const riskLevels = [
-        { value: 'low', label: 'Low' },
-        { value: 'medium', label: 'Medium' },
-        { value: 'high', label: 'High' },
+        { value: 'low', label: 'منخفض' },
+        { value: 'medium', label: 'متوسط' },
+        { value: 'high', label: 'عالي' },
     ];
 
     return (
@@ -131,22 +127,35 @@ function Sidebar({
                     onClick={() => setBetMode('manual')}
                     disabled={isAutoBetting}
                 >
-                    Manual
+                    يدوي
                 </button>
                 <button
                     className={`bet-mode-tab ${betMode === 'auto' ? 'active' : ''}`}
                     onClick={() => setBetMode('auto')}
                     disabled={isAutoBetting}
                 >
-                    Auto
+                    تلقائي
                 </button>
             </div>
+
+            {/* Bet Button (Moved to top) */}
+            <button
+                className={`bet-button ${isAutoBetting ? 'stop' : ''}`}
+                onClick={handleBetClick}
+                disabled={isDropBallDisabled}
+                style={{ marginBottom: '16px' }}
+            >
+                {betMode === 'manual' ? 'إسقاط الكرة' : isAutoBetting ? 'إيقاف الرهان التلقائي' : 'بدء الرهان التلقائي'}
+            </button>
 
             {/* Bet Amount */}
             <div className="form-group">
                 <div className="form-header">
-                    <label htmlFor="betAmount" className="form-label" style={{ margin: 0 }}>Bet Amount</label>
-                    <Text type="secondary" style={{ margin: 0 }}>₿{(betAmount ?? 0).toFixed(2)}</Text>
+                    <label htmlFor="betAmount" className="form-label" style={{ margin: 0 }}>مبلغ الرهان</label>
+                    <Text type="secondary" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <CurrencyIcon size={14} />
+                        {(betAmount ?? 0).toFixed(2)}
+                    </Text>
                 </div>
                 <div className="input-row">
                     <InputNumber
@@ -160,7 +169,7 @@ function Sidebar({
                         controls={false}
                         formatter={(v) => `${v}`}
                         parser={(v) => v.replace(/\$\s?|(,*)/g, '')}
-                        addonBefore={<div className="btc-icon">₿</div>}
+                        addonBefore={<div className="btc-icon" style={{display:'flex', alignItems:'center', justifyContent:'center'}}><CurrencyIcon size={16} /></div>}
                     />
                     <Button.Group>
                         <Button
@@ -178,16 +187,16 @@ function Sidebar({
                     </Button.Group>
                 </div>
                 {isBetAmountNegative && (
-                    <p className="error-text">This must be greater than or equal to 0.</p>
+                    <p className="error-text">يجب أن يكون أكبر من أو يساوي 0.</p>
                 )}
                 {isBetExceedBalance && (
-                    <p className="error-text">Can't bet more than your balance!</p>
+                    <p className="error-text">لا يمكنك الرهان بأكثر من رصيدك!</p>
                 )}
             </div>
 
             {/* Risk Level */}
             <div className="form-group">
-                <label htmlFor="riskLevel" className="form-label">Risk</label>
+                <label htmlFor="riskLevel" className="form-label">المخاطرة</label>
                 <select
                     id="riskLevel"
                     value={riskLevel}
@@ -203,7 +212,7 @@ function Sidebar({
 
             {/* Row Count */}
             <div className="form-group">
-                <label htmlFor="rowCount" className="form-label">Rows</label>
+                <label htmlFor="rowCount" className="form-label">الصفوف</label>
                 <select
                     id="rowCount"
                     value={rowCount}
@@ -221,8 +230,8 @@ function Sidebar({
             {betMode === 'auto' && (
                 <div className="form-group">
                     <div className="form-label-row">
-                        <label htmlFor="autoBetInput" className="form-label">Number of Bets</label>
-                        <span className="help-icon" title="Enter '0' for unlimited bets.">?</span>
+                        <label htmlFor="autoBetInput" className="form-label">عدد الرهانات</label>
+                        <span className="help-icon" title="أدخل '0' للرهانات غير المحدودة.">?</span>
                     </div>
                     <div className="auto-bet-input">
                         <input
@@ -240,36 +249,18 @@ function Sidebar({
                         )}
                     </div>
                     {isAutoBetInputNegative && (
-                        <p className="error-text">This must be greater than or equal to 0.</p>
+                        <p className="error-text">يجب أن يكون أكبر من أو يساوي 0.</p>
                     )}
                 </div>
             )}
-
-            {/* Bet Button */}
-            <button
-                className={`bet-button ${isAutoBetting ? 'stop' : ''}`}
-                onClick={handleBetClick}
-                disabled={isDropBallDisabled}
-            >
-                {betMode === 'manual' ? 'Drop Ball' : isAutoBetting ? 'Stop Autobet' : 'Start Autobet'}
-            </button>
 
             {/* Footer */}
             <div className="sidebar-footer">
                 <div className="footer-buttons">
                     <button
-                        className={`footer-btn ${isSettingsOpen ? 'active' : ''}`}
-                        onClick={onSettingsClick}
-                        title="Game Settings"
-                    >
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1 0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66z" />
-                        </svg>
-                    </button>
-                    <button
                         className={`footer-btn ${isStatsOpen ? 'active' : ''}`}
                         onClick={onStatsClick}
-                        title="Live Stats"
+                        title="الإحصائيات المباشرة"
                     >
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M16 11.78l4.24-7.33 1.73 1-5.23 9.05-6.51-3.75L5.46 19H22v2H2V3h2v14.54L9.5 8z" />
@@ -280,10 +271,23 @@ function Sidebar({
 
             {/* --- Plinko extra: Ball Selector, Last Win, Streak --- */}
             <div className="ball-selector-card sidebar-card">
-                <div className="ball-selector-header">
-                    <StarOutlined />
-                    <span>Ball Type</span>
+                <div 
+                    className="ball-selector-header" 
+                    onClick={() => setIsBallSelectorExpanded(!isBallSelectorExpanded)}
+                    style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <StarOutlined />
+                        <span>نوع الكرة</span>
+                        {!isBallSelectorExpanded && selectedBallType && (
+                            <span style={{ fontSize: '12px', background: '#2a3f4d', padding: '2px 8px', borderRadius: '10px', color: '#10b981' }}>
+                                {ballTypes[selectedBallType]?.name}
+                            </span>
+                        )}
+                    </div>
+                    <span>{isBallSelectorExpanded ? '▲' : '▼'}</span>
                 </div>
+                {isBallSelectorExpanded && (
                 <div className="ball-types-grid">
                     {Object.values(ballTypes || {}).map(ball => (
                         <Tooltip
@@ -292,7 +296,7 @@ function Sidebar({
                                 <div>
                                     <div style={{ fontWeight: 600 }}>{ball.name}</div>
                                     <div>{ball.description}</div>
-                                    <div style={{ color: 'var(--text-secondary)' }}>Cost: {ball.cost}× bet</div>
+                                    <div style={{ color: 'var(--text-secondary)' }}>التكلفة: {ball.cost}× الرهان</div>
                                 </div>
                             }
                         >
@@ -313,6 +317,7 @@ function Sidebar({
                         </Tooltip>
                     ))}
                 </div>
+                )}
             </div>
 
             {/* Last Win card removed as requested */}

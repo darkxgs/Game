@@ -47,6 +47,7 @@ import PlayerBets from './PlayerBets'
 import PlayerResults from './PlayerResults'
 import ProvablyFair from '../utils/ProvablyFair'
 import { AudioManager } from '../utils/AudioManager'
+import { CurrencyIcon, CURRENCY_NAME, CURRENCY_SYMBOL } from '../../config/currency'
 import './CrashGame.css'
 
 const { Text, Title, Paragraph } = Typography
@@ -353,6 +354,7 @@ function CrashGame() {
         setCountdown(5)
         setPlayerCashouts([])
         setUserBetData(null)
+        setBetPlaced(false)
     }, [])
 
     // Handle crash
@@ -367,7 +369,7 @@ function CrashGame() {
             if (betPlaced) {
                 // User didn't cash out in time, lost bet
                 profit = -userBetData.amount
-                showToast('loss', 'You Lost!', `-₿${userBetData.amount.toFixed(2)} — Crashed @${crashMultiplier.toFixed(2)}×`, 4000)
+                showToast('error', 'You Lost!', `-${CURRENCY_SYMBOL}${userBetData.amount.toFixed(2)} — Crashed @${crashMultiplier.toFixed(2)}×`, 4000)
             } else {
                 // User cashed out
                 profit = parseFloat(userBetData.profit) - userBetData.amount
@@ -464,7 +466,7 @@ function CrashGame() {
     const handleBet = (amount) => {
         audioManagerRef.current?.resume();
         if (amount > balance) {
-            showToast('error', 'Insufficient Balance', `You need ₿${amount.toFixed(2)} but only have ₿${balance.toFixed(2)}`)
+            showToast('error', 'Insufficient Balance', `You need ${CURRENCY_SYMBOL}${amount.toFixed(2)} but only have ${CURRENCY_SYMBOL}${balance.toFixed(2)}`)
             return
         }
         placeBet(amount)
@@ -473,12 +475,12 @@ function CrashGame() {
         setUserBetData({
             name: 'You',
             amount: amount,
-            currency: { symbol: '₿', color: '#f7931a', name: 'BTC' },
+            currency: { symbol: CURRENCY_SYMBOL, color: '#f7931a', name: CURRENCY_NAME },
             active: true,
             cashoutAt: null,
             profit: null
         })
-        showToast('bet', 'Bet Placed', `₿${amount.toFixed(2)}`, 2500)
+        showToast('success', 'Bet Placed', `${CURRENCY_SYMBOL}${amount.toFixed(2)}`, 2500)
     }
 
     // Handle cashout
@@ -497,7 +499,7 @@ function CrashGame() {
 
             audioManagerRef.current?.playCashout();
 
-            showToast('win', 'You Won!', `+₿${profit.toFixed(2)} at ${multiplier.toFixed(2)}×`, 4000)
+            showToast('success', 'You Won!', `+${CURRENCY_SYMBOL}${profit.toFixed(2)} at ${multiplier.toFixed(2)}×`, 4000)
         }
     }
 
@@ -558,8 +560,8 @@ function CrashGame() {
                         )}
                     </div>
 
-                    {/* Bottom: Two Betting Panels */}
-                    <div className="crash-betting-section">
+                    {/* Bottom: Betting Panel */}
+                    <div className="crash-betting-section" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <BettingPanel
                             phase={phase}
                             betPlaced={betPlaced}
@@ -567,14 +569,6 @@ function CrashGame() {
                             onBet={handleBet}
                             onCashout={handleCashout}
                             panelId="1"
-                        />
-                        <BettingPanel
-                            phase={phase}
-                            betPlaced={false}
-                            multiplier={multiplier}
-                            onBet={(amt) => messageApi.info('Second bet panel coming soon!')}
-                            onCashout={() => {}}
-                            panelId="2"
                         />
                     </div>
                 </div>
@@ -608,9 +602,9 @@ function CrashGame() {
                         <div className="profit-box">
                             <div className="profit-main">
                                 <p className="label">Profit</p>
-                                <p className="value" style={{ color: totalProfit >= 0 ? '#4ade80' : '#f87171' }}>
-                                    ₿{totalProfit.toFixed(2)}
-                                </p>
+                                <div className={`stat-value ${totalProfit >= 0 ? 'profit-up' : 'profit-down'}`} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <CurrencyIcon size={14} />{totalProfit.toFixed(2)}
+                                </div>
                             </div>
                             <div className="profit-divider"></div>
                             <div className="profit-stats">
@@ -629,9 +623,11 @@ function CrashGame() {
                         <div className="chart-box" onMouseLeave={() => setHoveredProfitValue(null)}>
                             <p className="label">Profit History</p>
                             {hoveredProfitValue !== null && (
-                                <p className="hovered-value" style={{ color: hoveredProfitValue >= 0 ? '#4ade80' : '#f87171' }}>
-                                    {hoveredProfitValue >= 0 ? '' : '-'}₿{Math.abs(hoveredProfitValue).toFixed(2)}
-                                </p>
+                                <div className={`stat-value ${hoveredProfitValue >= 0 ? 'profit-up' : 'profit-down'}`} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    {hoveredProfitValue >= 0 ? '' : '-'}
+                                    <CurrencyIcon size={14} />
+                                    {Math.abs(hoveredProfitValue).toFixed(2)}
+                                </div>
                             )}
                             <div className="canvas-wrapper">
                                 <canvas ref={chartCanvasRef}></canvas>
@@ -710,8 +706,10 @@ function CrashGame() {
                                                     {r.cashedOutAt ? r.cashedOutAt.toFixed(2) : r.multiplier.toFixed(2)}×
                                                 </div>
                                             </div>
-                                            <div className={`history-card-profit ${isWin ? 'profit-up' : 'profit-down'}`}>
-                                                {isWin ? '+' : '-'}₿{Math.abs(r.profit).toFixed(2)}
+                                            <div className={`history-card-profit ${isWin ? 'profit-up' : 'profit-down'}`} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                {isWin ? '+' : '-'}
+                                                <CurrencyIcon size={14} />
+                                                {Math.abs(r.profit).toFixed(2)}
                                             </div>
                                         </div>
                                     );

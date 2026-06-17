@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { SoundOutlined, SettingOutlined, InfoCircleOutlined } from '@ant-design/icons';
-import { Modal, Tabs, Slider } from 'antd';
+import { Modal, Tabs, Slider, message } from 'antd';
 import './PlayerBets.css';
 
 // Mock player data for the exact image clone look
@@ -31,6 +31,27 @@ function PlayerBets({ phase, multiplier, onPlayerCashout, userBetData }) {
     // Sliders state
     const [musicVolume, setMusicVolume] = useState(15);
     const [soundVolume, setSoundVolume] = useState(80);
+
+    const [activeTab, setActiveTab] = useState('Live Bets');
+
+    const historyPlayers = [
+        { id: '1****8', bet: 50.00, x: 2.50, win: 125.00 },
+        { id: '2****1', bet: 10.00, x: 1.50, win: 15.00 },
+        { id: '0****5', bet: 5.00, x: null, win: null },
+        { id: '3****4', bet: 25.00, x: 3.10, win: 77.50 },
+        { id: '4****9', bet: 100.00, x: 1.10, win: 110.00 },
+        { id: '8****1', bet: 15.00, x: null, win: null },
+        { id: '7****2', bet: 20.00, x: 5.00, win: 100.00 },
+    ];
+
+    const topWinnerPlayers = [
+        { id: '9****9', bet: 500.00, x: 10.50, win: 5250.00 },
+        { id: '8****1', bet: 200.00, x: 15.00, win: 3000.00 },
+        { id: '7****2', bet: 150.00, x: 12.00, win: 1800.00 },
+        { id: '6****3', bet: 50.00, x: 25.00, win: 1250.00 },
+        { id: '5****4', bet: 10.00, x: 100.00, win: 1000.00 },
+        { id: '4****5', bet: 5.00, x: 500.00, win: 2500.00 },
+    ];
 
     // Sync music volume with global App.jsx audio
     useEffect(() => {
@@ -127,7 +148,7 @@ function PlayerBets({ phase, multiplier, onPlayerCashout, userBetData }) {
                     <span className="clone-balance">500,000</span>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', position: 'relative', alignItems: 'center' }}>
-                    <button className="clone-play-btn">PLAY FOR REAL</button>
+                    <button className="clone-play-btn" onClick={() => message.info('Coming soon!')}>PLAY FOR REAL</button>
                     
                     <div className={`clone-options-menu ${showOptions ? 'open' : ''}`}>
                         <SoundOutlined onClick={() => setIsSettingsOpen(true)} />
@@ -179,9 +200,9 @@ function PlayerBets({ phase, multiplier, onPlayerCashout, userBetData }) {
 
             {/* Tabs */}
             <div className="clone-tabs">
-                <div className="clone-tab active">Live Bets</div>
-                <div className="clone-tab">History</div>
-                <div className="clone-tab">Top Winners</div>
+                <div className={`clone-tab ${activeTab === 'Live Bets' ? 'active' : ''}`} onClick={() => setActiveTab('Live Bets')}>Live Bets</div>
+                <div className={`clone-tab ${activeTab === 'History' ? 'active' : ''}`} onClick={() => setActiveTab('History')}>History</div>
+                <div className={`clone-tab ${activeTab === 'Top Winners' ? 'active' : ''}`} onClick={() => setActiveTab('Top Winners')}>Top Winners</div>
             </div>
 
             {/* Table Headers */}
@@ -194,7 +215,7 @@ function PlayerBets({ phase, multiplier, onPlayerCashout, userBetData }) {
 
             {/* Table List */}
             <div className="clone-table-list">
-                {players.map((p, i) => (
+                {(activeTab === 'Live Bets' ? players : activeTab === 'History' ? historyPlayers : topWinnerPlayers).map((p, i) => (
                     <div key={i} className={`clone-table-row ${p.win ? 'won' : ''}`}>
                         <span>{p.id}</span>
                         <span>{p.bet}</span>

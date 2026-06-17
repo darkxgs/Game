@@ -101,7 +101,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 30px 0 20px;
+  padding: 10px 0 10px;
   position: relative;
   flex-shrink: 0;
 }
@@ -199,7 +199,7 @@
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 120px;
+  padding-bottom: 24px;
 }
 
 .panel {
@@ -369,13 +369,12 @@
 }
 
 .btn-container {
-  position: absolute;
-  bottom: 0;
-  left: 0;
   width: 100%;
-  padding: 16px 20px;
-  background: linear-gradient(0deg, #050505 0%, rgba(5,5,5,0.8) 60%, transparent 100%);
+  padding: 12px 20px 16px 20px;
+  background: rgba(15, 16, 22, 0.95);
+  border-top: 1px solid rgba(255, 215, 0, 0.15);
   z-index: 30;
+  flex-shrink: 0;
 }
 
 .sbn {
@@ -384,7 +383,7 @@
   justify-content: center;
   gap: 12px;
   width: 100%;
-  padding: 16px;
+  padding: 12px;
   background: linear-gradient(135deg, #FFD700 0%, #F5A623 100%);
   border: none;
   border-radius: 16px;

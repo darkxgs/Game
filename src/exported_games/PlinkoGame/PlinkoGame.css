@@ -1051,7 +1051,7 @@
 /* Responsive */
 @media (max-width: 1024px) {
     .plinko-container {
-        flex-direction: column;
+        flex-direction: column-reverse;
     }
 
     .plinko-sidebar-wrapper {
@@ -1100,7 +1100,8 @@
         width: 100%;
         min-width: 100%;
         border-right: none;
-        border-top: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0;
         height: auto;
         flex: none;
     }

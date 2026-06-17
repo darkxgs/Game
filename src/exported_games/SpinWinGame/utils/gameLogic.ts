@@ -14,7 +14,7 @@ export const SEGS: Sector[] = [
   {mult:25, bg:'#350d60', ac:'#9b59b6', icon:'/assets/medal_gold.png', weight: 35},
   {mult:5,  bg:'#083636', ac:'#1abc9c', icon:'/assets/car_yellow.png', weight: 197},
   {mult:10, bg:'#520c0c', ac:'#ff6b6b', icon:'/assets/target.png', weight: 97},
-  {mult:5,  bg:'#27125a', ac:'#8e44ad', icon:'/assets/car_red.png', weight: 197},
+  {mult:5,  bg:'#27125a', ac:'#8e44ad', icon:'/assets/gift.png', weight: 197},
 ];
 
 export const N = 8;

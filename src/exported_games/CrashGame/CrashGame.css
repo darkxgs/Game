@@ -1621,7 +1621,7 @@
         overflow-y: auto;
     }
     .crash-game .game-container {
-        flex-direction: column-reverse;
+        flex-direction: column;
         overflow-y: visible;
         height: auto;
     }
@@ -1629,8 +1629,8 @@
         width: 100%;
         min-width: 100%;
         border-right: none;
-        border-top: 1px solid var(--border-color);
-        padding-bottom: 24px;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0;
         height: auto;
         flex: none;
     }

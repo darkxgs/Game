@@ -116,7 +116,7 @@ function GameChart({ phase, multiplier, elapsedTime, countdown, history = [] }) 
         });
         ctx.globalAlpha = 1.0;
 
-        const padding = { left: 10, right: 50, top: 50, bottom: 10 }
+        const padding = { left: 20, right: 50, top: 60, bottom: 20 }
         const chartWidth = width - padding.left - padding.right
         const chartHeight = height - padding.top - padding.bottom
 
@@ -243,48 +243,65 @@ function GameChart({ phase, multiplier, elapsedTime, countdown, history = [] }) 
                 angle = Math.atan2(p2.y - p1.y, p2.x - p1.x)
             }
 
-            // Sync HTML Elements over Canvas (using will-change for GPU acceleration)
-            if (rocketRef.current) {
-                if (phase === 'running') {
-                    rocketRef.current.style.display = 'block'
-                    rocketRef.current.style.left = `${endX}px`
-                    rocketRef.current.style.top = `${endY}px`
-                    rocketRef.current.style.transform = `translate(-50%, -50%) rotate(${angle}rad) rotate(90deg)`
-                } else {
-                    // Show rocket resting at the start position
-                    rocketRef.current.style.display = 'block'
-                    rocketRef.current.style.left = `${padding.left}px`
-                    rocketRef.current.style.top = `${canvasSizeRef.current.height - padding.bottom}px`
-                    rocketRef.current.style.transform = `translate(-50%, -50%) rotate(-0.1rad) rotate(90deg)`
+            // HTML overlay sync moved outside
+        } // End of running/crashed curve block
+
+        // --- ALWAYS update HTML overlays (Sync to canvas) ---
+        if (rocketRef.current) {
+            if (phase === 'running') {
+                const endX = timeToX(elapsedTime)
+                const endY = multiplierToY(multiplier)
+                
+                let angle = 0
+                const numPoints = Math.min(200, Math.max(80, Math.floor(elapsedTime * 20)))
+                if (numPoints >= 2) {
+                    const t1 = Math.max(0, elapsedTime - 0.5)
+                    const x1 = timeToX(t1)
+                    const y1 = multiplierToY(Math.pow(Math.E, 0.1 * t1))
+                    angle = Math.atan2(endY - y1, endX - x1)
                 }
-            }
-            if (exhaustRef.current) {
-                if (phase === 'running') {
+
+                rocketRef.current.style.display = 'block'
+                rocketRef.current.style.left = `${endX}px`
+                rocketRef.current.style.top = `${endY}px`
+                rocketRef.current.style.transform = `translate(-50%, -50%) rotate(${angle}rad) rotate(90deg)`
+
+                if (exhaustRef.current) {
                     exhaustRef.current.style.display = 'block'
                     exhaustRef.current.style.left = `${endX}px`
                     exhaustRef.current.style.top = `${endY}px`
                     exhaustRef.current.style.transform = `translate(-50%, -50%) rotate(${angle}rad) rotate(90deg) translate(0px, 95px)`
-                } else {
-                    exhaustRef.current.style.display = 'none'
                 }
-            }
-            if (explosionRef.current) {
-                if (phase === 'crashed') {
-                    if (explosionRef.current.style.display !== 'block') {
-                        explosionRef.current.style.display = 'block'
-                        explosionRef.current.style.left = `${endX}px`
-                        explosionRef.current.style.top = `${endY}px`
-                        explosionRef.current.src = '/images/explosions/normal_explosion.gif?' + Date.now()
+            } else if (phase === 'waiting' || (phase === 'crashed' && elapsedTime === 0)) {
+                // Show rocket resting at the start position (horizontal)
+                rocketRef.current.style.display = 'block'
+                rocketRef.current.style.left = `${padding.left}px`
+                rocketRef.current.style.top = `${height - padding.bottom}px`
+                rocketRef.current.style.transform = `translate(-50%, -50%) rotate(0rad) rotate(90deg)`
 
-                        setTimeout(() => {
-                            if (explosionRef.current) {
-                                explosionRef.current.style.display = 'none'
-                            }
-                        }, 1000)
-                    }
-                } else {
-                    explosionRef.current.style.display = 'none'
+                if (exhaustRef.current) exhaustRef.current.style.display = 'none'
+            } else {
+                rocketRef.current.style.display = 'none'
+                if (exhaustRef.current) exhaustRef.current.style.display = 'none'
+            }
+        }
+
+        if (explosionRef.current) {
+            if (phase === 'crashed' && elapsedTime > 0) {
+                if (explosionRef.current.style.display !== 'block') {
+                    explosionRef.current.style.display = 'block'
+                    explosionRef.current.style.left = `${timeToX(elapsedTime)}px`
+                    explosionRef.current.style.top = `${multiplierToY(multiplier)}px`
+                    explosionRef.current.src = '/images/explosions/normal_explosion.gif?' + Date.now()
+
+                    setTimeout(() => {
+                        if (explosionRef.current) {
+                            explosionRef.current.style.display = 'none'
+                        }
+                    }, 1000)
                 }
+            } else {
+                explosionRef.current.style.display = 'none'
             }
         }
     }, [phase, multiplier, elapsedTime, maxTime, maxMultiplier])
@@ -339,9 +356,8 @@ function GameChart({ phase, multiplier, elapsedTime, countdown, history = [] }) 
                 })}
             </div>
 
-            {/* Centered Overlay Container for Multiplier and Status */}
-            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'none', zIndex: 20 }}>
-                {/* Multiplier Display */}
+            {/* Fixed Overlay Container for Multiplier to prevent vertical shifting */}
+            <div style={{ position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', zIndex: 20 }}>
                 <Title
                     level={1}
                     style={{
@@ -353,31 +369,34 @@ function GameChart({ phase, multiplier, elapsedTime, countdown, history = [] }) 
                         textShadow: phase === 'crashed' ? 'none' : '0 0 40px rgba(255,255,255,0.2)',
                         transition: 'none',
                         fontFamily: "'Inter', -apple-system, sans-serif",
-                        lineHeight: 1
+                        fontVariantNumeric: 'tabular-nums',
+                        lineHeight: 1,
+                        textAlign: 'center',
+                        whiteSpace: 'nowrap'
                     }}
                 >
                     {multiplier.toFixed(2)}x
                 </Title>
-
-                {/* Status Message */}
-                {(phase === 'waiting' || phase === 'crashed') && (
-                    <div style={{ marginTop: '16px' }}>
-                        <Tag
-                            color={phase === 'crashed' ? 'error' : 'warning'}
-                            style={{
-                                fontSize: 15,
-                                padding: '8px 24px',
-                                borderRadius: 24,
-                                fontWeight: 600,
-                                letterSpacing: '0.5px',
-                                textTransform: 'uppercase'
-                            }}
-                        >
-                            {getStatusText()}
-                        </Tag>
-                    </div>
-                )}
             </div>
+
+            {/* Separate Overlay Container for Status Message so it doesn't push the multiplier */}
+            {(phase === 'waiting' || phase === 'crashed') && (
+                <div style={{ position: 'absolute', top: '65%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', zIndex: 20 }}>
+                    <Tag
+                        color={phase === 'crashed' ? 'error' : 'warning'}
+                        style={{
+                            fontSize: 15,
+                            padding: '8px 24px',
+                            borderRadius: 24,
+                            fontWeight: 600,
+                            letterSpacing: '0.5px',
+                            textTransform: 'uppercase'
+                        }}
+                    >
+                        {getStatusText()}
+                    </Tag>
+                </div>
+            )}
         </div>
     )
 }

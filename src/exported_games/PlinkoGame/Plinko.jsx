@@ -4,7 +4,7 @@ import PlinkoEngine from './PlinkoEngine';
 import { getBinColors, BIN_PAYOUTS } from './constants';
 import './Plinko.css';
 
-function BinsRow({ rowCount, riskLevel, winRecords, binsWidthPercentage }) {
+function BinsRow({ rowCount, riskLevel, winRecords, binsWidthPercentage, bonusMultiplier = 1 }) {
     const binsRef = useRef([]);
     const [highlightedBin, setHighlightedBin] = useState(null);
 
@@ -56,7 +56,7 @@ function BinsRow({ rowCount, riskLevel, winRecords, binsWidthPercentage }) {
                         '--shadow-color': binColors.shadow[binIndex],
                     }}
                 >
-                    {payout}{payout < 100 ? '×' : ''}
+                    {parseFloat((payout * bonusMultiplier).toFixed(2))}{payout * bonusMultiplier < 100 ? '×' : ''}
                 </div>
             ))}
         </div>
@@ -94,7 +94,8 @@ function Plinko({
     onBallEnterBin,
     onBalanceChange,
     engineRef,
-    soundEnabled
+    soundEnabled,
+    bonusMultiplier
 }) {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
@@ -187,6 +188,7 @@ function Plinko({
                         riskLevel={riskLevel}
                         winRecords={winRecords}
                         binsWidthPercentage={binsWidthPercentage}
+                        bonusMultiplier={bonusMultiplier}
                     />
                 </div>
             </div>

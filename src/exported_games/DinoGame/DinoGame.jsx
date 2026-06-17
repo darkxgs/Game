@@ -51,6 +51,7 @@ import CONFIG from './core/config/game';
 import BootScene from './core/scenes/boot/BootScene';
 import GameScene from './core/scenes/game/GameScene';
 import ProvablyFair from '../utils/ProvablyFair';
+import { CurrencyIcon, CURRENCY_NAME } from '../../config/currency';
 
 import './DinoGame.css';
 
@@ -58,9 +59,9 @@ const { Text, Title, Paragraph } = Typography;
 
 // Difficulty presets
 const DIFFICULTIES = {
-    easy: { label: 'Easy', survivalChance: 0.85, multiplierPerJump: 1.15, color: '#00f0ff' },
-    medium: { label: 'Medium', survivalChance: 0.65, multiplierPerJump: 1.40, color: '#f7931a' },
-    hard: { label: 'Hard', survivalChance: 0.45, multiplierPerJump: 1.90, color: '#ed4245' },
+    easy: { label: 'سهل', survivalChance: 0.85, multiplierPerJump: 1.15, color: '#00f0ff' },
+    medium: { label: 'متوسط', survivalChance: 0.65, multiplierPerJump: 1.40, color: '#f7931a' },
+    hard: { label: 'صعب', survivalChance: 0.45, multiplierPerJump: 1.90, color: '#ed4245' },
 };
 
 const DEFAULT_BALANCE = 200;
@@ -295,7 +296,7 @@ function DinoGame() {
                                 amount: betAmountRef.current,
                             });
 
-                            showToast('loss', 'Dino Crashed!', `-₿${betAmountRef.current.toFixed(2)}`, 3000);
+                            showToast('loss', 'تحطم الديناصور!', `-${CURRENCY_NAME}${betAmountRef.current.toFixed(2)}`, 3000);
                         }
                     });
 
@@ -334,7 +335,7 @@ function DinoGame() {
         setPotentialWin(betAmount);
         setLastResult(null);
 
-        showToast('bet', 'Game Started', `₿${betAmount.toFixed(2)} — ${DIFFICULTIES[difficulty].label}`, 2500);
+        showToast('bet', 'بدأت اللعبة', `${CURRENCY_NAME}${betAmount.toFixed(2)} — ${DIFFICULTIES[difficulty].label}`, 2500);
 
         // Trigger game start immediately without spacebar
         if (gameSceneRef.current) {
@@ -393,7 +394,7 @@ function DinoGame() {
 
             if (newCleared > highScore) setHighScore(newCleared);
 
-            showToast('win', 'Obstacle Cleared!', `Jump ${newCleared} — ${newMult.toFixed(2)}×`, 1500);
+            showToast('win', 'تم تخطي الحاجز!', `القفزة ${newCleared} — ${newMult.toFixed(2)}×`, 1500);
         } else {
             // RNG says die!
             gameScene.events.emit(CONFIG.EVENTS.JUMP_FAIL);
@@ -426,7 +427,7 @@ function DinoGame() {
             gameScene.events.emit(CONFIG.EVENTS.GAME_OVER, gameScene.score, gameScene.highScore);
         }
 
-        showToast('win', 'Cashed Out!', `+₿${(winAmount - betAmountRef.current).toFixed(2)} at ${currentMultiplier.toFixed(2)}×`, 4000);
+        showToast('win', 'تم السحب!', `+${CURRENCY_NAME}${(winAmount - betAmountRef.current).toFixed(2)} بمضاعف ${currentMultiplier.toFixed(2)}×`, 4000);
     }, [gamePhase, currentMultiplier, obstaclesCleared, showToast]);
 
     // Fullscreen
@@ -624,17 +625,48 @@ function DinoGame() {
                 <div className="dino-container">
                     {/* Betting Sidebar */}
                     <div className="dino-sidebar">
+                        {/* Action Buttons (In-Game) - Kept at TOP so they don't get pushed down */}
+                        {(gamePhase === 'running' || gamePhase === 'waiting') && (
+                            <div className="jump-decision" style={{ marginBottom: '16px' }}>
+                                <button
+                                    className="bet-button jump-btn"
+                                    style={{ marginBottom: '12px' }}
+                                    onClick={handleJump}
+                                    disabled={gamePhase !== 'waiting'}
+                                >
+                                    <div>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                            <ThunderboltOutlined /> اقفز!
+                                        </div>
+                                        <div style={{ fontSize: '12px', fontWeight: '500', color: gamePhase === 'waiting' ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)', textTransform: 'none', marginTop: '4px' }}>
+                                            المخاطرة للحصول على {getMultiplierForCleared(obstaclesCleared + 1).toFixed(2)}×
+                                        </div>
+                                    </div>
+                                </button>
+                                <button
+                                    className="bet-button"
+                                    onClick={cashOut}
+                                    disabled={!(gamePhase === 'waiting' || (gamePhase === 'running' && obstaclesCleared > 0))}
+                                >
+                                    <TrophyOutlined /> سحب {CURRENCY_NAME} {(betAmount * currentMultiplier).toFixed(2)}
+                                </button>
+                            </div>
+                        )}
+
                         {/* Bet Mode Tabs */}
                         <div className="bet-mode-tabs">
-                            <button className="bet-mode-tab active">Manual</button>
-                            <button className="bet-mode-tab" disabled>Auto</button>
+                            <button className="bet-mode-tab active">يدوي</button>
+                            <button className="bet-mode-tab" disabled>تلقائي</button>
                         </div>
 
                         {/* Bet Amount */}
                         <div className="form-group">
                             <div className="form-header">
-                                <label className="form-label" style={{ margin: 0 }}>Bet Amount</label>
-                                <Text type="secondary" style={{ margin: 0 }}>₿{(betAmount ?? 0).toFixed(2)}</Text>
+                                <label className="form-label" style={{ margin: 0 }}>مبلغ الرهان</label>
+                                <Text type="secondary" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <CurrencyIcon size={14} />
+                                    {(betAmount ?? 0).toFixed(2)}
+                                </Text>
                             </div>
                             <div className="input-row">
                                 <InputNumber
@@ -648,7 +680,7 @@ function DinoGame() {
                                     formatter={(v) => `${v}`}
                                     parser={(v) => v.replace(/\$\s?|(,*)/g, '')}
                                     addonBefore={
-                                        <div className="dino-currency-icon">₿</div>
+                                        <div className="dino-currency-icon" style={{display:'flex', alignItems:'center', justifyContent:'center'}}><CurrencyIcon size={16} /></div>
                                     }
                                 />
                                 <Button.Group className="dino-btn-group">
@@ -667,20 +699,20 @@ function DinoGame() {
                                 </Button.Group>
                             </div>
                             {betAmount > balance && (
-                                <p className="error-text">Can't bet more than your balance!</p>
+                                <p className="error-text">لا يمكنك الرهان بأكثر من رصيدك!</p>
                             )}
                         </div>
 
                         {/* Difficulty Selector */}
                         <div className="form-group difficulty-section">
                             <div className="form-header" style={{ marginBottom: 12 }}>
-                                <label className="form-label" style={{ margin: 0 }}>Difficulty</label>
+                                <label className="form-label" style={{ margin: 0 }}>المخاطرة</label>
                                 <div
                                     className="survive-badge"
                                     style={{ '--diff-color': diffConfig.color }}
                                 >
                                     <div className="survive-indicator"></div>
-                                    {Math.round(diffConfig.survivalChance * 100)}% Survive
+                                    % نجاة {Math.round(diffConfig.survivalChance * 100)}
                                 </div>
                             </div>
                             <div className="difficulty-tabs">
@@ -698,47 +730,21 @@ function DinoGame() {
                             </div>
                             <div className="difficulty-info">
                                 <Text type="secondary" style={{ fontSize: 11 }}>
-                                    Provable Fairness: <span style={{ color: '#00f0ff', fontWeight: 'bold' }}>99.00%</span> RTP
+                                    نزاهة مثبتة: نسبة عائد <span style={{ color: '#00f0ff', fontWeight: 'bold' }}>99.00%</span>
                                 </Text>
                             </div>
                         </div>
 
-                        {/* Action Buttons */}
+                        {/* Place Bet Button */}
                         {canBet && (
                             <button
                                 className="bet-button"
                                 onClick={placeBet}
                                 disabled={betAmount <= 0 || betAmount > balance}
+                                style={{ marginTop: '16px', marginBottom: '16px' }}
                             >
-                                <PlayCircleOutlined /> {gamePhase === 'idle' ? 'Place Bet' : 'Play Again'}
+                                <PlayCircleOutlined /> {gamePhase === 'idle' ? 'وضع الرهان' : 'العب مجدداً'}
                             </button>
-                        )}
-
-                        {(gamePhase === 'running' || gamePhase === 'waiting') && (
-                            <div className="jump-decision">
-                                <button
-                                    className="bet-button jump-btn"
-                                    style={{ marginBottom: '12px' }}
-                                    onClick={handleJump}
-                                    disabled={gamePhase !== 'waiting'}
-                                >
-                                    <div>
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                                            <ThunderboltOutlined /> JUMP!
-                                        </div>
-                                        <div style={{ fontSize: '12px', fontWeight: '500', color: gamePhase === 'waiting' ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)', textTransform: 'none', marginTop: '4px' }}>
-                                            Risk for {getMultiplierForCleared(obstaclesCleared + 1).toFixed(2)}×
-                                        </div>
-                                    </div>
-                                </button>
-                                <button
-                                    className="bet-button"
-                                    onClick={cashOut}
-                                    disabled={!(gamePhase === 'waiting' || (gamePhase === 'running' && obstaclesCleared > 0))}
-                                >
-                                    <TrophyOutlined /> Cash Out ₿{(betAmount * currentMultiplier).toFixed(2)}
-                                </button>
-                            </div>
                         )}
 
                         {/* Current Status Card */}
@@ -746,39 +752,37 @@ function DinoGame() {
                             <div className="last-win-card current">
                                 <div className="last-win-header">
                                     <FireOutlined className="fire-icon" />
-                                    <span>Current Run</span>
+                                    <span>المحاولة الحالية</span>
                                 </div>
                                 <div className="last-win-multiplier" style={{ '--run-color': diffConfig.color }}>
                                     {currentMultiplier.toFixed(2)}×
                                 </div>
-                                <div className="last-win-amount">
-                                    +₿{(betAmount * currentMultiplier).toFixed(2)}
+                                <div className="last-win-amount" style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'4px'}}>
+                                    +<CurrencyIcon size={14}/>{(betAmount * currentMultiplier).toFixed(2)}
                                 </div>
                                 <div className="last-win-score">
-                                    Cleared {obstaclesCleared} obstacles
+                                    تخطى {obstaclesCleared} حواجز
                                 </div>
                             </div>
                         )}
-
-
 
                         {/* Last Result Card */}
                         {lastResult && (
                             <div className={`last-win-card ${lastResult.type === 'loss' ? 'lost' : 'won'}`}>
                                 <div className="last-win-header">
                                     <TrophyOutlined />
-                                    <span>Last Game</span>
+                                    <span>اللعبة السابقة</span>
                                 </div>
                                 {lastResult.type === 'loss' ? (
                                     <>
-                                        <div className="last-win-result lost">💀 Crashed!</div>
-                                        <div className="last-win-score">Cleared {lastResult.obstaclesCleared} obstacles</div>
+                                        <div className="last-win-result lost">💀 تحطم!</div>
+                                        <div className="last-win-score">تخطى {lastResult.obstaclesCleared} حواجز</div>
                                     </>
                                 ) : (
                                     <>
                                         <div className="last-win-multiplier">{lastResult.multiplier.toFixed(2)}×</div>
-                                        <div className="last-win-amount">+₿{lastResult.amount.toFixed(2)}</div>
-                                        <div className="last-win-score">Cleared {lastResult.obstaclesCleared} obstacles</div>
+                                        <div className="last-win-amount" style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'4px'}}>+<CurrencyIcon size={14}/>{lastResult.amount.toFixed(2)}</div>
+                                        <div className="last-win-score">تخطى {lastResult.obstaclesCleared} حواجز</div>
                                     </>
                                 )}
                             </div>
@@ -786,13 +790,13 @@ function DinoGame() {
 
                         {/* Footer */}
                         <div className="sidebar-footer">
-                            <Tooltip title="Live Stats">
+                            <Tooltip title="الإحصائيات المباشرة">
                                 <Button type="text" icon={<LineChartOutlined />} className="footer-btn" onClick={() => setStatsDrawerOpen(true)} />
                             </Tooltip>
-                            <Tooltip title="Dashboard">
+                            <Tooltip title="لوحة التحكم">
                                 <Button type="text" icon={<BarChartOutlined />} className="footer-btn" onClick={() => setHistoryModalOpen(true)} />
                             </Tooltip>
-                            <Tooltip title="Fairness">
+                            <Tooltip title="النزاهة">
                                 <Button type="text" icon={<SafetyCertificateOutlined />} className="footer-btn" onClick={() => setFairnessModalOpen(true)} />
                             </Tooltip>
                         </div>
@@ -802,11 +806,11 @@ function DinoGame() {
                     <div className="dino-game-area">
                         <div className="game-hud">
                             <div className="hud-item score">
-                                <span className="hud-label">Jumps</span>
+                                <span className="hud-label">القفزات</span>
                                 <span className="hud-value">{obstaclesCleared}</span>
                             </div>
                             <div className="hud-item highscore">
-                                <span className="hud-label">Best</span>
+                                <span className="hud-label">الأفضل</span>
                                 <span className="hud-value">{highScore}</span>
                             </div>
                             {isPlaying && (
@@ -825,16 +829,16 @@ function DinoGame() {
                             <div className="bet-overlay">
                                 <div className="bet-overlay-content">
                                     <div className="dino-icon">🦖</div>
-                                    <div className="overlay-title">Dino Gamble</div>
-                                    <div className="overlay-subtitle">Place your bet to start the run!</div>
+                                    <div className="overlay-title">لعبة الديناصور</div>
+                                    <div className="overlay-subtitle">ضع رهانك لتبدأ اللعب!</div>
                                 </div>
                             </div>
                         )}
 
                         {gamePhase === 'waiting' && (
                             <div className="obstacle-warning">
-                                <div className="warning-pulse">⚠️ OBSTACLE AHEAD!</div>
-                                <div className="warning-sub">Jump or Cash Out?</div>
+                                <div className="warning-pulse">⚠️ حاجز في الطريق!</div>
+                                <div className="warning-sub">القفز أم سحب الأرباح؟</div>
                             </div>
                         )}
 
@@ -844,7 +848,7 @@ function DinoGame() {
                                 <div className="widget-header debug-widget-header" onMouseDown={handleDebugDragStart}>
                                     <div className="widget-title">
                                         <BugOutlined style={{ color: '#00f0ff', fontSize: 18 }} />
-                                        <span style={{ color: '#00f0ff' }}>FAIRNESS DEBUG</span>
+                                        <span style={{ color: '#00f0ff' }}>تصحيح النزاهة</span>
                                     </div>
                                     <div className="widget-actions">
                                         <button className="widget-btn-icon" onMouseDown={(e) => e.stopPropagation()} onClick={() => setIsDebugMode(false)}>
@@ -854,34 +858,34 @@ function DinoGame() {
                                 </div>
                                 <div className="widget-content debug-widget-content">
                                     <div className="debug-row">
-                                        <span className="debug-label">Next Hash:</span>
+                                        <span className="debug-label">الهاش التالي:</span>
                                         <span className="debug-value">{fairnessData.serverSeedHash?.substring(0, 16) || fairnessData.serverSeed?.substring(0, 16)}...</span>
                                     </div>
                                     <div className="debug-row">
-                                        <span className="debug-label">Client Seed:</span>
+                                        <span className="debug-label">سيد اللاعب:</span>
                                         <span className="debug-value">{fairnessData.clientSeed?.substring(0, 10)}...</span>
                                     </div>
                                     <div className="debug-row">
-                                        <span className="debug-label">Next Nonce:</span>
+                                        <span className="debug-label">الرقم التالي:</span>
                                         <span className="debug-value">{fairnessData.nonce}</span>
                                     </div>
                                     <div className="debug-target">
-                                        DIFFICULTY: <span className="target-bin">{DIFFICULTIES[difficulty].label}</span>
+                                        الصعوبة: <span className="target-bin">{DIFFICULTIES[difficulty].label}</span>
                                         <div style={{ fontSize: 13, color: '#fff', marginTop: 4, textShadow: 'none' }}>
-                                            Survival Chance: <span style={{ color: '#00f0ff' }}>{Math.round(DIFFICULTIES[difficulty].survivalChance * 100)}%</span>
+                                            نسبة النجاة: <span style={{ color: '#00f0ff' }}>{Math.round(DIFFICULTIES[difficulty].survivalChance * 100)}%</span>
                                         </div>
                                     </div>
 
                                     {debugData && (
                                         <div className="debug-path-row" style={{ marginTop: 12 }}>
-                                            <div style={{ color: '#b1bad3', fontSize: 11, width: '100%', textAlign: 'center', marginBottom: 4 }}>NEXT ROLL PREDICTION</div>
+                                            <div style={{ color: '#b1bad3', fontSize: 11, width: '100%', textAlign: 'center', marginBottom: 4 }}>توقع النتيجة التالية</div>
                                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                                                 <span style={{ color: '#fff', fontSize: 16 }}>
-                                                    Roll: <span style={{ color: '#ff2e93' }}>{(debugData.roll * 100).toFixed(2)}</span>
+                                                    النتيجة: <span style={{ color: '#ff2e93' }}>{(debugData.roll * 100).toFixed(2)}</span>
                                                 </span>
                                                 <span style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>
-                                                    Status: <span style={{ color: debugData.survived ? '#00f0ff' : '#ff4d4f' }}>
-                                                        {debugData.survived ? 'SURVIVE' : 'CRASH'}
+                                                    الحالة: <span style={{ color: debugData.survived ? '#00f0ff' : '#ff4d4f' }}>
+                                                        {debugData.survived ? 'نجاة' : 'تحطم'}
                                                     </span>
                                                 </span>
                                             </div>
@@ -898,7 +902,7 @@ function DinoGame() {
                                     content={
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '4px 8px' }}>
                                             <BulbOutlined style={{ fontSize: 16, color: isDarkMode ? '#f7931a' : '#8c9bac' }} />
-                                            <span style={{ color: '#fff', fontSize: 13, fontWeight: 500 }}>Canvas Dark Mode</span>
+                                            <span style={{ color: '#fff', fontSize: 13, fontWeight: 500 }}>الوضع الليلي</span>
                                             <Switch size="small" checked={isDarkMode} onChange={setIsDarkMode} />
                                         </div>
                                     }
@@ -907,23 +911,20 @@ function DinoGame() {
                                     placement="topLeft"
                                     overlayInnerStyle={{ background: '#0a0b10', border: '1px solid #2a3f4d', borderRadius: 8 }}
                                 >
-                                    <Tooltip title="Settings">
+                                    <Tooltip title="الإعدادات">
                                         <Button type="text" icon={<SettingOutlined />} className="control-btn" />
                                     </Tooltip>
                                 </Popover>
-                                <Tooltip title="Fullscreen">
-                                    <Button type="text" icon={isFullscreen ? <FullscreenExitOutlined /> : <ExpandOutlined />} className="control-btn" onClick={toggleFullscreen} />
-                                </Tooltip>
-                                <Tooltip title={soundEnabled ? "Mute" : "Unmute"}>
+                                <Tooltip title={soundEnabled ? "كتم الصوت" : "تشغيل الصوت"}>
                                     <Button type="text" icon={<SoundOutlined />} className={`control-btn ${!soundEnabled ? 'muted' : ''}`} onClick={() => setSoundEnabled(!soundEnabled)} />
                                 </Tooltip>
-                                <Tooltip title="Fairness Debug">
+                                <Tooltip title="تصحيح النزاهة">
                                     <Button type="text" icon={<BugOutlined style={{ color: isDebugMode ? '#00f0ff' : undefined }} />} className={`control-btn ${isDebugMode ? 'active' : ''}`} onClick={() => setIsDebugMode(!isDebugMode)} />
                                 </Tooltip>
                             </Space>
                             <span className="logo" style={{ color: 'var(--text-primary)' }}>Linkup</span>
                             <Button type="text" icon={<SafetyCertificateOutlined />} className="fairness-btn" onClick={() => setFairnessModalOpen(true)}>
-                                Fairness
+                                النزاهة
                             </Button>
                         </div>
                     </div>
@@ -933,7 +934,7 @@ function DinoGame() {
                 <div className="milestones-bar">
                     <div className="milestones-header">
                         <ThunderboltOutlined />
-                        <span>Multiplier Track ({DIFFICULTIES[difficulty].label})</span>
+                        <span>مسار المضاعف ({DIFFICULTIES[difficulty].label})</span>
                     </div>
                     <div className="milestones-list">
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((jump) => {
@@ -943,7 +944,7 @@ function DinoGame() {
                                     key={jump}
                                     className={`milestone-tag ${obstaclesCleared >= jump ? 'achieved' : ''} ${obstaclesCleared + 1 === jump ? 'next' : ''}`}
                                 >
-                                    Jump {jump}: {mult.toFixed(2)}×
+                                    قفزة {jump}: {mult.toFixed(2)}×
                                 </Tag>
                             );
                         })}
@@ -957,15 +958,15 @@ function DinoGame() {
                     <div className="widget-header" onMouseDown={handleDragStart}>
                         <div className="widget-title">
                             <LineChartOutlined style={{ fontSize: 20, color: '#94a3b8' }} />
-                            <span>Live Stats</span>
+                            <span>الإحصائيات المباشرة</span>
                         </div>
                         <div className="widget-actions">
-                            <Tooltip title="Reset Live Stats" placement="topRight">
+                            <Tooltip title="إعادة ضبط الإحصائيات" placement="topRight">
                                 <button className="widget-btn-icon" onMouseDown={(e) => e.stopPropagation()} onClick={() => setWinRecords([])}>
                                     <ReloadOutlined />
                                 </button>
                             </Tooltip>
-                            <Tooltip title="View History" placement="topRight">
+                            <Tooltip title="عرض السجل" placement="topRight">
                                 <button className="widget-btn-icon" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setHistoryModalOpen(true); setStatsDrawerOpen(false); }}>
                                     <RightOutlined />
                                 </button>
@@ -980,19 +981,19 @@ function DinoGame() {
                         {/* Profit Overview */}
                         <div className="profit-box">
                             <div className="profit-main">
-                                <p className="label">Profit</p>
+                                <p className="label">الربح</p>
                                 <p className="value" style={{ color: totalProfit >= 0 ? '#4ade80' : '#f87171' }}>
-                                    ₿{totalProfit.toFixed(2)}
+                                    {totalProfit >= 0 ? '+' : '-'}₿{Math.abs(totalProfit).toFixed(2)}
                                 </p>
                             </div>
                             <div className="profit-divider"></div>
                             <div className="profit-stats">
                                 <div className="stat-row">
-                                    <p className="label">Wins</p>
+                                    <p className="label">فوز</p>
                                     <p className="value" style={{ color: '#4ade80' }}>{winsCount.toLocaleString()}</p>
                                 </div>
                                 <div className="stat-row">
-                                    <p className="label">Losses</p>
+                                    <p className="label">خسارة</p>
                                     <p className="value" style={{ color: '#f87171' }}>{lossesCount.toLocaleString()}</p>
                                 </div>
                             </div>
@@ -1000,7 +1001,7 @@ function DinoGame() {
 
                         {/* Chart.js Container */}
                         <div className="chart-box" onMouseLeave={() => setHoveredProfitValue(null)}>
-                            <p className="label">Profit History</p>
+                            <p className="label">سجل الأرباح</p>
                             {hoveredProfitValue !== null && (
                                 <p className="hovered-value" style={{ color: hoveredProfitValue >= 0 ? '#4ade80' : '#f87171' }}>
                                     {hoveredProfitValue >= 0 ? '' : '-'}₿{Math.abs(hoveredProfitValue).toFixed(2)}
@@ -1019,7 +1020,7 @@ function DinoGame() {
                 title={
                     <Space className="history-window-header-title">
                         <div className="icon-wrapper"><ThunderboltOutlined /></div>
-                        <span>Play History & Dashboard</span>
+                        <span>لوحة التحكم وتاريخ اللعب</span>
                     </Space>
                 }
                 centered
@@ -1031,28 +1032,26 @@ function DinoGame() {
                 closeIcon={<CloseOutlined style={{ color: '#94a3b8' }} />}
             >
                 <div className="history-window-content">
-                    {/* Achievements Summary Style */}
                     <div className="dashboard-section">
-                        <div className="section-title">Lifetime Stats</div>
-                        <div className="profit-box" style={{ background: 'transparent', padding: 0, border: 'none' }}>
-                            <div className="profit-main" style={{ marginBottom: 12 }}>
-                                <p className="label">Total Profit</p>
-                                <p className="value" style={{ color: totalProfit >= 0 ? '#4ade80' : '#f87171' }}>
-                                    {totalProfit >= 0 ? '+' : ''}₿{totalProfit.toFixed(2)}
-                                </p>
-                            </div>
-                            <div className="profit-divider" style={{ background: 'rgba(255,255,255,0.05)' }}></div>
-                            <div className="profit-stats" style={{ marginTop: 12 }}>
+                        <div className="section-title">إحصائيات مباشرة</div>
+                        <div className="stats-grid">
+                            <div className="stat-card glass-panel">
                                 <div className="stat-row">
-                                    <p className="label">Total Wagered</p>
-                                    <p className="value" style={{ color: '#ff2e93' }}>₿{totalWagered.toFixed(2)}</p>
+                                    <p className="label">مجموع الرهانات</p>
+                                    <p className="value"><CurrencyIcon size={14}/>{totalWagered.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                 </div>
                                 <div className="stat-row">
-                                    <p className="label">Best Run</p>
-                                    <p className="value" style={{ color: '#ffd700' }}>{highScore} jumps</p>
+                                    <p className="label">صافي الربح</p>
+                                    <p className={`value ${totalProfit >= 0 ? 'profit-pos' : 'profit-neg'}`}>
+                                        {totalProfit > 0 ? '+' : ''}<CurrencyIcon size={14}/>{totalProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </p>
                                 </div>
                                 <div className="stat-row">
-                                    <p className="label">Games Played</p>
+                                    <p className="label">أفضل محاولة</p>
+                                    <p className="value" style={{ color: '#ffd700' }}>{highScore} قفزات</p>
+                                </div>
+                                <div className="stat-row">
+                                    <p className="label">الألعاب الملعوبة</p>
                                     <p className="value" style={{ color: '#fff' }}>{gamesPlayed.toLocaleString()}</p>
                                 </div>
                             </div>
@@ -1060,19 +1059,19 @@ function DinoGame() {
                     </div>
 
                     <div className="dashboard-section">
-                        <div className="section-title">Achievements</div>
+                        <div className="section-title">الإنجازات</div>
                         <div className="achievements-row">
                             <div className={`achievement-badge ${gamesPlayed > 0 ? 'unlocked' : 'locked'}`}>
                                 <div className="achievement-icon"><StarOutlined /></div>
-                                <div className="achievement-title">First Run</div>
+                                <div className="achievement-title">أول محاولة</div>
                             </div>
                             <div className={`achievement-badge ${highScore >= 5 ? 'unlocked' : 'locked'}`}>
                                 <div className="achievement-icon"><FireOutlined /></div>
-                                <div className="achievement-title">Survivor 5</div>
+                                <div className="achievement-title">النجاة 5</div>
                             </div>
                             <div className={`achievement-badge ${totalProfit > 0 ? 'unlocked' : 'locked'}`}>
                                 <div className="achievement-icon"><TrophyOutlined /></div>
-                                <div className="achievement-title">In Profit</div>
+                                <div className="achievement-title">في ربح</div>
                             </div>
                         </div>
                     </div>
@@ -1084,7 +1083,7 @@ function DinoGame() {
                 title={
                     <Space>
                         <SafetyCertificateOutlined style={{ color: '#00f0ff' }} />
-                        <span>Provably Fair</span>
+                        <span>نزاهة مثبتة</span>
                     </Space>
                 }
                 open={fairnessModalOpen}
@@ -1100,13 +1099,13 @@ function DinoGame() {
                 <div className="fairness-header">
                     <Title level={5}>
                         <CheckCircleOutlined style={{ marginRight: 8 }} />
-                        This game is provably fair
+                        هذه اللعبة ذات نزاهة مثبتة
                     </Title>
-                    <Paragraph>Uses HMAC-SHA256 to generate each jump result from server seed + client seed + nonce.</Paragraph>
+                    <Paragraph>نستخدم HMAC-SHA256 لتوليد كل نتيجة قفزة باستخدام البذرة من السيرفر + البذرة الخاصة بك + رقم الجولة.</Paragraph>
                 </div>
 
                 <div className="fairness-item">
-                    <span className="fairness-label">Server Seed (Hash)</span>
+                    <span className="fairness-label">بذرة السيرفر (تشفير)</span>
                     <div className="fairness-value">
                         <Text copyable={{ text: fairnessData.serverSeedHash }} style={{ fontSize: 11, wordBreak: 'break-all' }}>
                             {fairnessData.serverSeedHash?.slice(0, 24)}...
@@ -1115,7 +1114,7 @@ function DinoGame() {
                 </div>
 
                 <div className="fairness-item">
-                    <span className="fairness-label">Client Seed</span>
+                    <span className="fairness-label">بذرة اللاعب</span>
                     <div className="fairness-value" style={{ display: 'flex', gap: 6 }}>
                         <Input
                             size="small"
@@ -1128,7 +1127,7 @@ function DinoGame() {
                 </div>
 
                 <div className="fairness-item">
-                    <span className="fairness-label">Nonce</span>
+                    <span className="fairness-label">رقم الجولة (Nonce)</span>
                     <div className="fairness-value">
                         <Text style={{ background: 'rgba(47, 69, 83, 0.5)', padding: '4px 12px', borderRadius: 6, color: '#fff' }}>
                             {fairnessData.nonce}
@@ -1137,7 +1136,7 @@ function DinoGame() {
                 </div>
 
                 <div className="fairness-item">
-                    <span className="fairness-label">Difficulty</span>
+                    <span className="fairness-label">الصعوبة</span>
                     <div className="fairness-value">
                         <Tag color={DIFFICULTIES[difficulty].color === '#00f0ff' ? 'success' : DIFFICULTIES[difficulty].color === '#f7931a' ? 'warning' : 'error'}>
                             {DIFFICULTIES[difficulty].label} ({Math.round(DIFFICULTIES[difficulty].survivalChance * 100)}%)
@@ -1148,12 +1147,12 @@ function DinoGame() {
                 <Divider style={{ borderColor: 'rgba(255,255,255,0.06)', margin: '12px 0' }} />
 
                 {revealedSeed && (
-                    <div style={{ marginBottom: 12 }}>
-                        <Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                            Previous Server Seed (Revealed)
-                        </Text>
+                    <div className="revealed-seed-box" style={{ marginBottom: 12 }}>
+                        <div className="revealed-seed-header" style={{ color: '#94a3b8', fontSize: 11, marginBottom: 8 }}>
+                            <UnlockOutlined /> السيد السابق للسيرفر (مكشوف)
+                        </div>
                         <div className="fairness-item" style={{ marginTop: 6 }}>
-                            <span className="fairness-label">Seed</span>
+                            <span className="fairness-label">السيد (Seed)</span>
                             <div className="fairness-value">
                                 <Text copyable={{ text: revealedSeed.serverSeed }} style={{ fontSize: 10, wordBreak: 'break-all' }}>
                                     {revealedSeed.serverSeed.slice(0, 20)}...
@@ -1161,9 +1160,9 @@ function DinoGame() {
                             </div>
                         </div>
                         <div className="fairness-item">
-                            <span className="fairness-label">Hash</span>
+                            <span className="fairness-label">الهاش</span>
                             <div className="fairness-value">
-                                <Text style={{ fontSize: 10, wordBreak: 'break-all', color: '#00f0ff' }}>
+                                <Text copyable={{ text: revealedSeed.serverSeedHash }} style={{ fontSize: 10, wordBreak: 'break-all', color: '#00f0ff' }}>
                                     {revealedSeed.serverSeedHash?.slice(0, 20)}...
                                 </Text>
                             </div>
@@ -1175,10 +1174,10 @@ function DinoGame() {
                     type="primary"
                     block
                     className="fairness-verify-btn"
-                    icon={<SyncOutlined />}
+                    icon={<SyncOutlined spin={false} />}
                     onClick={handleRotateSeed}
                 >
-                    Rotate Seed (Reveal Current)
+                    تغيير السيد (كشف الحالي)
                 </Button>
             </Modal>
         </div>

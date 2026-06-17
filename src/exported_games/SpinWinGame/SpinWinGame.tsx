@@ -1,5 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { IconCoin, IconRefresh, IconVolume, IconVolumeOff } from '@tabler/icons-react';
+import { Modal } from 'antd';
+import { IconRefresh, IconVolume, IconVolumeOff } from '@tabler/icons-react';
+import { CurrencyIcon, CURRENCY_NAME } from '../../config/currency';
 import { Wheel } from './components/Wheel';
 import { BettingPanel } from './components/BettingPanel';
 import { SectorSelection } from './components/SectorSelection';
@@ -23,6 +25,9 @@ export default function SpinWinGame() {
   const [sparks, setSparks] = useState<{ id: number, tx: string, ty: string, size: number, color: string, delay: number }[]>([]);
   const [bgParticles, setBgParticles] = useState<{ id: number, sz: number, top: number, left: number, op: number, dur: number, del: number }[]>([]);
   const [isMuted, setIsMuted] = useState(false);
+  
+  const [historyRecords, setHistoryRecords] = useState<any[]>([]);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   // Init audio engine on first interaction
   useEffect(() => {
@@ -119,15 +124,18 @@ export default function SpinWinGame() {
       setWinningSector(winIdx);
       
       const s = SEGS[winIdx];
+      let profit = -totalBet; // Start with loss of the total bet placed on this spin
+
       if (selectedSectors.has(winIdx)) {
         const prize = betAmount * s.mult;
+        profit = prize - totalBet;
         setBalance(prev => prev + prize);
         
         if (s.mult >= 15) {
           audio.playJackpot();
           setJackpotPrize(prize);
         } else {
-          setToastMsg({ text: `مبروك! ربحت ${Math.round(prize).toLocaleString()} كوين`, duration: 3500 });
+          setToastMsg({ text: `مبروك! ربحت ${Math.round(prize).toLocaleString()} ${CURRENCY_NAME}`, duration: 3500 });
           triggerBurst();
           audio.playWin();
         }
@@ -135,6 +143,17 @@ export default function SpinWinGame() {
         setToastMsg({ text: 'حظك أحسن المرة الجاية!' });
         audio.playLose();
       }
+
+      setHistoryRecords(prev => [{
+        id: Date.now(),
+        timestamp: new Date().toLocaleTimeString(),
+        totalBet: totalBet,
+        multiplier: s.mult,
+        color: s.color,
+        profit: profit,
+        isWin: selectedSectors.has(winIdx)
+      }, ...prev].slice(0, 30));
+
     }, 5100);
   }, [spinning, selectedSectors, betAmount, balance, totalDeg]);
 
@@ -147,6 +166,36 @@ export default function SpinWinGame() {
           {jackpotPrize !== null && (
             <JackpotOverlay amount={jackpotPrize} onComplete={() => setJackpotPrize(null)} />
           )}
+
+          <Modal
+            title="سجلي (My History)"
+            open={isHistoryOpen}
+            onCancel={() => setIsHistoryOpen(false)}
+            footer={null}
+            className="history-window box-modal-3d"
+            centered
+            styles={{ content: { background: '#0a0b10', padding: 0 } }}
+          >
+            <div className="dashboard-section" style={{ padding: '24px' }}>
+              <div className="history-list">
+                {historyRecords.length === 0 ? (
+                  <div className="empty-state" style={{ color: '#64748b', textAlign: 'center', padding: '20px 0' }}>لا يوجد سجل حتى الآن</div>
+                ) : (
+                  historyRecords.map(r => (
+                    <div key={r.id} className="history-card glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', marginBottom: '8px', borderRadius: '8px', background: 'rgba(30, 41, 59, 0.4)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                         <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: r.color, boxShadow: `0 0 10px ${r.color}` }}></div>
+                         <div style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>{r.multiplier}x</div>
+                      </div>
+                      <div style={{ color: r.isWin ? '#10b981' : '#ef4444', fontWeight: 'bold', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                         {r.isWin ? '+' : ''}{Math.abs(r.profit).toLocaleString()} <CurrencyIcon size={16} />
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </Modal>
 
           {bgParticles.map(p => (
             <div key={p.id} className="bg-particle" style={{
@@ -173,7 +222,7 @@ export default function SpinWinGame() {
             </div>
             <div className="gname">SPIN & WIN</div>
             <div className="cpill">
-              <IconCoin size={18} />
+              <CurrencyIcon size={18} />
               <span>{Math.round(balance).toLocaleString()}</span>
             </div>
           </div>
@@ -186,6 +235,13 @@ export default function SpinWinGame() {
               spinning={spinning} 
             />
 
+            <div className="btn-container" style={{ padding: '0 16px 20px', background: 'transparent', borderTop: 'none' }}>
+              <button className="sbn" disabled={spinning} onClick={doSpin}>
+                <IconRefresh size={22} className={spinning ? 'spinning-icon' : ''} />
+                دور العجلة {selectedSectors.size > 0 ? `(الإجمالي: ${fmt(selectedSectors.size * betAmount)})` : ''}
+              </button>
+            </div>
+
             <BettingPanel betAmount={betAmount} setBetAmount={setBetAmount} spinning={spinning} />
             
             <SectorSelection selectedSectors={selectedSectors} toggleSector={toggleSector} betAmount={betAmount} />
@@ -193,17 +249,14 @@ export default function SpinWinGame() {
             <PrizesBar />
 
             <div className="srow">
-              <div className="stat">رصيد: <em>{fmt(balance)}</em></div>
-              <button className="rb">سجلي</button>
-              <div className="stat">فائز اليوم: <em>0</em></div>
+              <div className="stat" style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
+                رصيد: <CurrencyIcon size={14} /> <em>{fmt(balance)}</em>
+              </div>
+              <button className="rb" onClick={() => setIsHistoryOpen(true)}>سجلي</button>
+              <div className="stat" style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
+                فائز اليوم: <CurrencyIcon size={14} /> <em>0</em>
+              </div>
             </div>
-          </div>
-
-          <div className="btn-container">
-            <button className="sbn" disabled={spinning} onClick={doSpin}>
-              <IconRefresh size={22} className={spinning ? 'spinning-icon' : ''} />
-              دور العجلة
-            </button>
           </div>
         </div>
       </div>

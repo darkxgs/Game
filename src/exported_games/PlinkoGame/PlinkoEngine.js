@@ -152,16 +152,17 @@ class PlinkoEngine {
                 this.ctx.fillStyle = '#00f0ff'; // Linkup signature green when hit
                 this.ctx.fill();
 
-                // Bright glow effect
+                // Fast glow effect (replacing slow shadowBlur)
                 if (progress > 0) {
                     this.ctx.beginPath();
+                    this.ctx.arc(pin.x, pin.y, pin.radius + (3 * progress), 0, Math.PI * 2);
+                    this.ctx.fillStyle = `rgba(0, 240, 255, ${0.4 * progress})`;
+                    this.ctx.fill();
+                    
+                    this.ctx.beginPath();
                     this.ctx.arc(pin.x, pin.y, pin.radius, 0, Math.PI * 2);
-                    this.ctx.shadowBlur = 10 * progress;
-                    this.ctx.shadowColor = '#00f0ff';
                     this.ctx.fillStyle = '#00f0ff';
                     this.ctx.fill();
-                    // Reset shadow so it doesn't affect other elements
-                    this.ctx.shadowBlur = 0;
                 }
             } else {
                 this.ctx.beginPath();
